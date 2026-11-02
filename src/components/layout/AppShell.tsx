@@ -1,26 +1,26 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { queryKeys, useScans } from '@/api/queries'
-import { Prompt } from '@/features/prompt/Prompt'
+import { queryKeys, useScans, useTargets } from '@/api/queries'
+import { TooltipProvider } from '@/components/ui/Help'
+import { NewScanDialog } from '@/features/scans/NewScanDialog'
 import { toast } from '@/stores/toast'
+import { useUiStore } from '@/stores/ui'
 import type { Scan } from '@/types/domain'
-import { NAV_ITEMS } from './nav'
-import { StatusBar } from './StatusBar'
-import { WindowBar } from './WindowBar'
-
-function isTypingTarget(el: EventTarget | null): boolean {
-  if (!(el instanceof HTMLElement)) return false
-  return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)
-}
+import { CommandPalette } from './CommandPalette'
+import { MobileTabBar } from './MobileTabBar'
+import { Sidebar } from './Sidebar'
+import { TopBar } from './TopBar'
 
 /**
- * When a scan we saw running finishes, refresh the data it changes and tell the operator.
- * This is what closes the workflow loop: launch scan -> watch progress -> findings appear.
+ * When a scan we saw running finishes, refresh the data it changes and tell the user, with a direct
+ * link to the issues it found. This closes the workflow loop: start scan -> watch progress -> review.
  */
 function useScanCompletionWatcher() {
   const { data: scans } = useScans()
+  const { data: targets } = useTargets()
   const qc = useQueryClient()
+  const navigate = useNavigate()
   const previous = useRef<Map<string, Scan['status']>>(new Map())
 
   useEffect(() => {
@@ -31,74 +31,59 @@ function useScanCompletionWatcher() {
         void qc.invalidateQueries({ queryKey: queryKeys.findings })
         void qc.invalidateQueries({ queryKey: queryKeys.targets })
         const total = Object.values(scan.findingsCount).reduce((a, b) => a + b, 0)
-        toast.success(
-          `${scan.id} completed`,
-          `${total} findings. Type "scan:${scan.id}" in the prompt to review them.`,
-        )
+        const name = targets?.find((t) => t.id === scan.targetId)?.name ?? 'your website'
+        toast.success(`Scan of ${name} finished`, `${total} issue${total === 1 ? '' : 's'} found.`, {
+          label: 'Review issues',
+          onClick: () => navigate(`/findings?scan=${scan.id}`),
+        })
       }
     }
     previous.current = new Map(scans.map((s) => [s.id, s.status]))
-  }, [scans, qc])
+  }, [scans, targets, qc, navigate])
 }
 
 export function AppShell() {
-  const promptRef = useRef<HTMLInputElement>(null)
-  const navigate = useNavigate()
+  const setPaletteOpen = useUiStore((s) => s.setPaletteOpen)
+  const newScan = useUiStore((s) => s.newScan)
+  const setNewScanOpen = useUiStore((s) => s.setNewScanOpen)
   useScanCompletionWatcher()
 
+  // Ctrl/⌘K opens the quick finder. A convenience only: everything is also in the sidebar or a button.
   useEffect(() => {
-    let gPressedAt = 0
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        promptRef.current?.focus()
-        return
-      }
-      if (e.altKey && /^[1-6]$/.test(e.key)) {
-        const item = NAV_ITEMS[Number(e.key) - 1]
-        if (item) {
-          e.preventDefault()
-          navigate(item.to)
-        }
-        return
-      }
-      if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return
-      if (e.key === '/') {
-        e.preventDefault()
-        promptRef.current?.focus()
-        return
-      }
-      if (e.key === 'g') {
-        gPressedAt = Date.now()
-        return
-      }
-      if (Date.now() - gPressedAt < 900) {
-        const item = NAV_ITEMS.find((n) => n.key === e.key)
-        if (item) {
-          e.preventDefault()
-          navigate(item.to)
-        }
-        gPressedAt = 0
+        setPaletteOpen(true)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [navigate])
+  }, [setPaletteOpen])
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
-      <a
-        href="#main"
-        className="sr-only z-[70] bg-signal px-3 py-2 font-mono text-[12px] text-signal-ink focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
-      >
-        Skip to content
-      </a>
-      <WindowBar />
-      <main id="main" tabIndex={-1} className="relative min-h-0 flex-1 overflow-y-auto focus:outline-none">
-        <Outlet />
-      </main>
-      <Prompt ref={promptRef} />
-      <StatusBar />
-    </div>
+    <TooltipProvider>
+      <div className="flex h-dvh min-h-0 overflow-hidden bg-bg">
+        <a
+          href="#main"
+          className="sr-only z-[70] rounded-md bg-brand px-3 py-2 text-[14px] font-medium text-brand-ink focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+        >
+          Skip to content
+        </a>
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <TopBar />
+          <main
+            id="main"
+            tabIndex={-1}
+            className="relative min-h-0 flex-1 overflow-y-auto pb-20 focus:outline-none md:pb-0"
+          >
+            <Outlet />
+          </main>
+        </div>
+        <MobileTabBar />
+        <CommandPalette />
+        <NewScanDialog open={newScan.open} onOpenChange={setNewScanOpen} initialTargetId={newScan.targetId} />
+      </div>
+    </TooltipProvider>
   )
 }

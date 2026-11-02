@@ -21,6 +21,6 @@ export const useAuthStore = create<AuthState>()(
       signOut: () => set({ session: null }),
       updateUser: (user) => set((s) => (s.session ? { session: { ...s.session, user } } : s)),
     }),
-    { name: 'redcell:auth', storage: createJSONStorage(() => localStorage) },
+    { name: 'clearsite:auth', storage: createJSONStorage(() => localStorage) },
   ),
 )

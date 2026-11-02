@@ -13,7 +13,7 @@ import { VULNS } from './data/vulnerabilities'
  * - State is saved to sessionStorage, so mutations persist for the browser session like a real backend would.
  */
 
-export const STORAGE_KEY = 'redcell:mockdb:v1'
+export const STORAGE_KEY = 'clearsite:mockdb:v1'
 /** How long a new scan waits in the queue before it starts running. */
 export const QUEUE_DELAY_MS = 4_000
 

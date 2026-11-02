@@ -1,17 +1,33 @@
+import {
+  FileText,
+  Globe,
+  LayoutDashboard,
+  Radar,
+  Settings,
+  TriangleAlert,
+  type LucideIcon,
+} from 'lucide-react'
+
 export interface NavItem {
   to: string
-  /** tmux-style window name. */
   label: string
-  /** Second key of the `g` chord (g d, g t ...). */
-  key: string
+  icon: LucideIcon
+  /** One-line purpose, shown in the command palette. */
+  hint: string
 }
 
-/** Window order follows the analyst workflow: overview, add target, scan, triage, report, configure. */
+/** Order follows the user's workflow: overview, add a website, scan it, review issues, share a report. */
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/dashboard', label: 'dashboard', key: 'd' },
-  { to: '/targets', label: 'targets', key: 't' },
-  { to: '/scans', label: 'scans', key: 's' },
-  { to: '/findings', label: 'findings', key: 'f' },
-  { to: '/reports', label: 'reports', key: 'r' },
-  { to: '/settings', label: 'settings', key: 'c' },
+  { to: '/dashboard', label: 'Overview', icon: LayoutDashboard, hint: 'How your websites are doing' },
+  { to: '/targets', label: 'Websites & APIs', icon: Globe, hint: 'The sites you scan' },
+  { to: '/scans', label: 'Scans', icon: Radar, hint: 'Start and follow scans' },
+  { to: '/findings', label: 'Issues', icon: TriangleAlert, hint: 'Problems found, and how to fix them' },
+  { to: '/reports', label: 'Reports', icon: FileText, hint: 'PDF summaries to share' },
 ]
+
+export const SETTINGS_ITEM: NavItem = {
+  to: '/settings',
+  label: 'Settings',
+  icon: Settings,
+  hint: 'Profile, appearance and API key',
+}

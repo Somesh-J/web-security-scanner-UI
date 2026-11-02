@@ -36,8 +36,8 @@ const NotFoundPage = lazy(() => import('@/features/NotFoundPage').then((m) => ({
 
 function PageFallback() {
   return (
-    <div className="px-4 py-6 md:px-6">
-      <SkeletonRows label="loading module" rows={4} columns={['w-1/3', 'w-1/4', 'w-1/5']} />
+    <div className="mx-auto w-full max-w-[1280px] px-4 py-8 md:px-8">
+      <SkeletonRows label="Loading page" rows={4} columns={['w-1/3', 'w-1/4', 'w-1/5']} />
     </div>
   )
 }

@@ -5,9 +5,6 @@ import {
   hasFilters,
   normaliseCategory,
   normaliseCwe,
-  parsePrompt,
-  serializePrompt,
-  tokenize,
   toSearchParams,
   type FindingsQuery,
 } from './query'
@@ -62,69 +59,11 @@ describe('URL search params', () => {
   })
 })
 
-describe('prompt parsing', () => {
-  it('keeps quoted phrases together', () => {
-    expect(tokenize('target:"Acme Store" "sql injection" sev:crit')).toEqual([
-      'target:"Acme Store"',
-      '"sql injection"',
-      'sev:crit',
-    ])
-  })
-
-  it('parses keys, aliases and free text together', () => {
-    const { query, issues } = parsePrompt(
-      'sev:crit,med status:fp cat:3 cwe:89 sort:-date,title search page:2',
-    )
-    expect(issues).toEqual([])
-    expect(query.severity).toEqual(['critical', 'medium'])
-    expect(query.status).toEqual(['false_positive'])
-    expect(query.category).toEqual(['A03'])
-    expect(query.cwe).toEqual(['CWE-89'])
-    expect(query.sort).toEqual([
-      { key: 'date', dir: 'desc' },
-      { key: 'title', dir: 'asc' },
-    ])
-    expect(query.text).toBe('search')
-    expect(query.page).toBe(2)
-  })
-
-  it('reports invalid tokens but still applies valid ones', () => {
-    const { query, issues } = parsePrompt('sev:crit,urgent colour:red sql')
-    expect(query.severity).toEqual(['critical'])
-    expect(query.text).toBe('sql')
-    expect(issues.map((i) => i.token)).toEqual(['sev:crit,urgent', 'colour:red'])
-  })
-
-  it('resolves target names to IDs when a target list is given', () => {
-    const targets = [
-      { id: 'tgt_01', name: 'Acme Store' },
-      { id: 'tgt_02', name: 'Billing API' },
-    ]
-    expect(parsePrompt('target:"acme store"', { targets }).query.target).toEqual(['tgt_01'])
-    expect(parsePrompt('target:billing', { targets }).query.target).toEqual(['tgt_02'])
-    expect(parsePrompt('target:nowhere', { targets }).issues).toHaveLength(1)
-  })
-
-  it('round-trips prompt text through serializePrompt', () => {
-    const query = q({
-      text: 'jwt',
-      severity: ['high', 'critical'],
-      status: ['open', 'false_positive'],
-      category: ['A07'],
-      cwe: ['CWE-347'],
-      scan: ['scan_111'],
-      sort: [{ key: 'status', dir: 'asc' }],
-      pageSize: 50,
-    })
-    const text = serializePrompt(query)
-    expect(text).toBe('sev:crit,high status:open,fp cat:A07 cwe:347 scan:scan_111 sort:status size:50 jwt')
-    const reparsed = parsePrompt(text).query
-    expect(reparsed).toEqual({ ...query, severity: ['critical', 'high'] })
-  })
-
-  it('knows when filters are active', () => {
+describe('hasFilters', () => {
+  it('ignores sort and paging, but sees any filter or search text', () => {
     expect(hasFilters(EMPTY_QUERY)).toBe(false)
-    expect(hasFilters(q({ text: 'x' }))).toBe(true)
-    expect(hasFilters(q({ page: 4 }))).toBe(false)
+    expect(hasFilters({ ...EMPTY_QUERY, page: 3, pageSize: 50 })).toBe(false)
+    expect(hasFilters({ ...EMPTY_QUERY, text: 'sql' })).toBe(true)
+    expect(hasFilters({ ...EMPTY_QUERY, status: ['open'] })).toBe(true)
   })
 })

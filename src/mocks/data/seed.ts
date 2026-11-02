@@ -78,7 +78,7 @@ const TARGETS: Omit<TargetRecord, 'createdAt'>[] = [
     url: 'https://api.billing.example.com',
     environment: 'production',
     authenticated: true,
-    username: 'svc-redcell',
+    username: 'svc-clearsite',
   },
   {
     id: 'tgt_03',
