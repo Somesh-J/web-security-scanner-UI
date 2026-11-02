@@ -1,4 +1,6 @@
-# REDCELL — Design Direction
+# REDCELL — Design Direction (v1, superseded)
+
+> **Superseded by [DESIGN-v2.md](DESIGN-v2.md)** (Lumen). Kept for history only.
 
 Web security scanning console. Frontend intern assignment, seven screens.
 Stack fixed by the brief: React 18 + TypeScript + Vite + Tailwind + React Router.
