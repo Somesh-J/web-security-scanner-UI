@@ -71,7 +71,7 @@ export function buildPdf(lines: PdfLine[], title: string): Uint8Array<ArrayBuffe
   objects[2] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>`
   objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>'
   objects[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold >>'
-  objects[5] = `<< /Title (${escapePdf(title)}) /Producer (REDCELL console) >>`
+  objects[5] = `<< /Title (${escapePdf(title)}) /Producer (Clearsite) >>`
   pages.forEach((content, i) => {
     const pageId = 6 + i * 2
     objects[pageId] =

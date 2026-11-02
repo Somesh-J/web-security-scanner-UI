@@ -1,34 +1,32 @@
 import { cn } from '@/lib/cn'
 
 export type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
-export type Size = 'sm' | 'md'
+export type Size = 'sm' | 'md' | 'lg'
 
 /**
- * Terminal-style actions: [ LABEL ]. Hover and focus invert the colours, the way a TUI highlights
- * the selected control. Signal red is reserved for the one decisive action on a screen.
+ * One primary (brand-filled) action per screen; secondary for everything else; ghost for quiet
+ * toolbar actions; danger only for the confirm step of a destructive action.
  */
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-signal text-signal-ink hover:bg-bone hover:text-void',
-  secondary: 'text-bone hover:bg-bone hover:text-void',
-  ghost: 'text-ash hover:bg-panel-2 hover:text-bone',
-  danger: 'text-signal hover:bg-signal hover:text-signal-ink',
+  primary: 'bg-brand text-brand-ink hover:bg-brand-hover',
+  secondary: 'border border-line-strong bg-surface text-ink hover:border-ink-3 hover:bg-surface-2',
+  ghost: 'text-ink-2 hover:bg-surface-2 hover:text-ink',
+  danger: 'bg-danger text-surface hover:opacity-90',
 }
 
 const SIZES: Record<Size, string> = {
-  sm: 'h-7 px-1.5 text-[11.5px] gap-1',
-  md: 'h-9 px-2 text-[12.5px] gap-1.5',
+  sm: 'h-8 px-3 text-[13px] gap-1.5 [&_svg]:size-3.5',
+  md: 'h-9 px-3.5 text-[14px] gap-2 [&_svg]:size-4',
+  lg: 'h-11 px-5 text-[15px] gap-2 [&_svg]:size-[18px]',
 }
 
 /** Shared by <Button> and <ButtonLink> so links that navigate look exactly like buttons that act. */
 export function buttonClass(variant: Variant = 'secondary', size: Size = 'md', className?: string) {
   return cn(
-    'group/btn inline-flex shrink-0 items-center justify-center font-mono font-semibold tracking-[0.06em] uppercase whitespace-nowrap transition-colors duration-75',
-    'disabled:cursor-not-allowed disabled:opacity-45',
+    'inline-flex shrink-0 items-center justify-center rounded-md font-medium whitespace-nowrap transition-[background-color,color,opacity,box-shadow] duration-150',
+    'disabled:pointer-events-none disabled:opacity-50',
     VARIANTS[variant],
     SIZES[size],
     className,
   )
 }
-
-/** The bracket glyphs around a label. Dimmed on idle, inherit the inverted colour on hover. */
-export const BRACKET = 'opacity-60 group-hover/btn:opacity-100'

@@ -7,13 +7,6 @@ export function formatUtc(iso: string | null): string {
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}Z`
 }
 
-/** 02-18 09:06 — compact form for dense tables. */
-export function formatUtcShort(iso: string | null): string {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  return `${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
-}
-
 /** 742 -> "12:22", 3725 -> "1:02:05" */
 export function formatDuration(sec: number | null): string {
   if (sec === null) return '—'
@@ -40,10 +33,4 @@ export function formatRelative(iso: string | null, now: number = Date.now()): st
 
 export function pluralize(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`
-}
-
-/** "[#######.....]" — the nmap-style text readout that sits beside the real bar. */
-export function asciiBar(progress: number, width = 12): string {
-  const filled = Math.round((Math.min(100, Math.max(0, progress)) / 100) * width)
-  return `[${'#'.repeat(filled)}${'.'.repeat(width - filled)}]`
 }

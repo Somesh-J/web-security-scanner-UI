@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { csvCell, findingsToCsv } from './csv'
-import { asciiBar, formatDuration, formatRelative, formatUtc } from './format'
+import { formatDuration, formatRelative, formatUtc } from './format'
 import { pageWindow } from './pagination'
 import { buildPdf, wrap } from './pdf'
 import { safeNext } from './safeNext'
@@ -54,13 +54,6 @@ describe('format', () => {
     expect(formatRelative('2026-11-02T09:00:00Z', now)).toBe('3h ago')
     expect(formatRelative('2026-10-30T12:00:00Z', now)).toBe('3d ago')
     expect(formatRelative(null, now)).toBe('never')
-  })
-
-  it('draws a fixed-width ASCII progress bar', () => {
-    expect(asciiBar(0)).toBe('[............]')
-    expect(asciiBar(50)).toBe('[######......]')
-    expect(asciiBar(100)).toBe('[############]')
-    expect(asciiBar(140)).toHaveLength(14)
   })
 })
 

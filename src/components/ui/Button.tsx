@@ -1,7 +1,8 @@
+import { Loader2 } from 'lucide-react'
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
 import { cn } from '@/lib/cn'
-import { BRACKET, buttonClass, type Size, type Variant } from './buttonStyles'
+import { buttonClass, type Size, type Variant } from './buttonStyles'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
@@ -33,14 +34,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={buttonClass(variant, size, className)}
       {...rest}
     >
-      <span aria-hidden className={BRACKET}>
-        [
-      </span>
       {loading ? <Spinner /> : icon}
       {children}
-      <span aria-hidden className={BRACKET}>
-        ]
-      </span>
     </button>
   )
 })
@@ -56,19 +51,35 @@ export function ButtonLink({
 }: LinkProps & { variant?: Variant; size?: Size; icon?: ReactNode }) {
   return (
     <Link className={buttonClass(variant, size, className)} {...rest}>
-      <span aria-hidden className={BRACKET}>
-        [
-      </span>
       {icon}
       {children}
-      <span aria-hidden className={BRACKET}>
-        ]
-      </span>
     </Link>
   )
 }
 
-/** Classic terminal spinner: | / - \ cycling via CSS steps. */
 export function Spinner({ className }: { className?: string }) {
-  return <span aria-hidden data-spinner className={cn('inline-block w-[1ch] text-center', className)} />
+  return <Loader2 aria-hidden className={cn('animate-spin', className)} />
 }
+
+/** Square icon-only button. `label` is required so screen readers can name it. */
+export const IconButton = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & { label: string; size?: 'sm' | 'md' }
+>(function IconButton({ label, size = 'md', className, children, type = 'button', ...rest }, ref) {
+  return (
+    <button
+      ref={ref}
+      type={type}
+      aria-label={label}
+      title={label}
+      className={cn(
+        'inline-flex shrink-0 items-center justify-center rounded-md text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-50',
+        size === 'sm' ? 'size-8 [&_svg]:size-4' : 'size-9 [&_svg]:size-[18px]',
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </button>
+  )
+})

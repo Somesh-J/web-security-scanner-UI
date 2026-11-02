@@ -10,16 +10,16 @@ export const loginSchema = z.object({
   email: z
     .string()
     .trim()
-    .min(1, 'Enter your operator email.')
+    .min(1, 'Enter your email address.')
     .email('That email is not valid. Check for typos.'),
-  password: z.string().min(1, 'Enter your passphrase.').min(8, 'Passphrases are at least 8 characters.'),
+  password: z.string().min(1, 'Enter your password.').min(8, 'Passwords are at least 8 characters.'),
 })
 export type LoginValues = z.infer<typeof loginSchema>
 
 const httpUrl = z
   .string()
   .trim()
-  .min(1, 'Enter the URL to scan.')
+  .min(1, 'Enter the website address to scan.')
   .refine((value) => {
     try {
       const url = new URL(value)
@@ -36,7 +36,7 @@ export function targetFormSchema(mode: 'create' | 'edit') {
       name: z
         .string()
         .trim()
-        .min(2, 'Give the target a name of at least 2 characters.')
+        .min(2, 'Give the website a name of at least 2 characters.')
         .max(60, 'Keep the name under 60 characters.'),
       url: httpUrl,
       environment: z.enum(ENVIRONMENTS, { message: 'Choose an environment.' }),

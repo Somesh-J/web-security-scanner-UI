@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { pageWindow } from '@/lib/pagination'
 
@@ -24,29 +25,30 @@ export function Pagination({
 }: PaginationProps) {
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = Math.min(total, page * pageSize)
-  const btn = 'inline-flex h-7 min-w-7 items-center justify-center rounded-xs px-1.5 font-mono text-[12px]'
+  const btn =
+    'inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[13px] font-medium transition-colors'
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-wire px-4 py-2.5 font-mono text-[12px] text-ash">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3 text-[13px] text-ink-2">
       <p>
-        showing <span className="tabular text-bone">{from}</span>–
-        <span className="tabular text-bone">{to}</span> of <span className="tabular text-bone">{total}</span>{' '}
-        {noun}
+        Showing <span className="tabular font-medium text-ink">{from}</span>–
+        <span className="tabular font-medium text-ink">{to}</span> of{' '}
+        <span className="tabular font-medium text-ink">{total}</span> {noun}
       </p>
-      <div className="flex flex-wrap items-center gap-3">
-        <nav aria-label="Pagination" className="flex items-center gap-0.5">
+      <div className="flex flex-wrap items-center gap-4">
+        <nav aria-label="Pagination" className="flex items-center gap-1">
           <button
             type="button"
-            className={cn(btn, 'text-ash hover:text-bone disabled:opacity-40')}
+            className={cn(btn, 'text-ink-2 hover:bg-surface-2 hover:text-ink disabled:opacity-40')}
             onClick={() => onPage(page - 1)}
             disabled={page <= 1}
             aria-label="Previous page"
           >
-            ‹
+            <ChevronLeft aria-hidden className="size-4" />
           </button>
           {pageWindow(page, pageCount).map((p, i) =>
             p === 'gap' ? (
-              <span key={`gap-${i}`} aria-hidden className="px-1 text-smoke">
+              <span key={`gap-${i}`} aria-hidden className="px-1 text-ink-3">
                 …
               </span>
             ) : (
@@ -58,7 +60,10 @@ export function Pagination({
                 aria-label={`Page ${p}`}
                 className={cn(
                   btn,
-                  p === page ? 'bg-bone text-void' : 'text-ash hover:bg-panel-2 hover:text-bone',
+                  'tabular',
+                  p === page
+                    ? 'bg-brand-soft text-brand-text'
+                    : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
                 )}
               >
                 {p}
@@ -67,20 +72,20 @@ export function Pagination({
           )}
           <button
             type="button"
-            className={cn(btn, 'text-ash hover:text-bone disabled:opacity-40')}
+            className={cn(btn, 'text-ink-2 hover:bg-surface-2 hover:text-ink disabled:opacity-40')}
             onClick={() => onPage(page + 1)}
             disabled={page >= pageCount}
             aria-label="Next page"
           >
-            ›
+            <ChevronRight aria-hidden className="size-4" />
           </button>
         </nav>
         <label className="flex items-center gap-2">
-          rows
+          Per page
           <select
             value={pageSize}
             onChange={(e) => onPageSize(Number(e.target.value))}
-            className="h-7 cursor-pointer rounded-xs border border-wire bg-panel-2 px-1.5 text-bone focus:border-live focus:outline-none"
+            className="h-8 cursor-pointer rounded-md border border-line-strong bg-surface px-2 text-ink focus:border-brand focus:outline-none"
           >
             {pageSizes.map((s) => (
               <option key={s} value={s}>

@@ -1,13 +1,14 @@
+import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useToastStore, type ToastTone } from '@/stores/toast'
 
-const TONE: Record<ToastTone, { mark: string; className: string }> = {
-  info: { mark: '>', className: 'text-live' },
-  success: { mark: '✓', className: 'text-clear' },
-  error: { mark: '!', className: 'text-signal' },
+const TONE: Record<ToastTone, { Icon: typeof Info; className: string }> = {
+  info: { Icon: Info, className: 'text-brand-text' },
+  success: { Icon: CircleCheck, className: 'text-success' },
+  error: { Icon: CircleAlert, className: 'text-danger' },
 }
 
-/** Toast stack. The region is a polite live region so screen readers announce each message once. */
+/** Toast stack, bottom-right. A polite live region so screen readers announce each message once. */
 export function Toaster() {
   const toasts = useToastStore((s) => s.toasts)
   const dismiss = useToastStore((s) => s.dismiss)
@@ -16,31 +17,44 @@ export function Toaster() {
       aria-live="polite"
       aria-label="Notifications"
       role="region"
-      className="pointer-events-none fixed right-3 bottom-24 z-[60] flex w-[min(380px,calc(100vw-24px))] flex-col gap-2 md:bottom-20"
+      className="pointer-events-none fixed right-4 bottom-20 z-[60] flex w-[min(380px,calc(100vw-32px))] flex-col gap-2 md:bottom-6"
     >
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          role={t.tone === 'error' ? 'alert' : 'status'}
-          className="pointer-events-auto flex animate-drawer items-start gap-3 border border-wire-2 bg-void px-3.5 py-3 shadow-pop"
-        >
-          <span aria-hidden className={cn('font-mono text-[13px] font-semibold', TONE[t.tone].className)}>
-            {TONE[t.tone].mark}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-mono text-[12.5px] font-medium text-bone">{t.title}</p>
-            {t.detail && <p className="mt-0.5 text-[12.5px] break-words text-ash">{t.detail}</p>}
-          </div>
-          <button
-            type="button"
-            onClick={() => dismiss(t.id)}
-            className="rounded-xs px-1 font-mono text-[11px] text-smoke hover:text-bone"
-            aria-label="Dismiss notification"
+      {toasts.map((t) => {
+        const { Icon, className } = TONE[t.tone]
+        return (
+          <div
+            key={t.id}
+            role={t.tone === 'error' ? 'alert' : 'status'}
+            className="pointer-events-auto flex animate-rise items-start gap-3 rounded-lg border border-line bg-surface px-4 py-3 shadow-lg"
           >
-            ✕
-          </button>
-        </div>
-      ))}
+            <Icon aria-hidden className={cn('mt-0.5 size-[18px] shrink-0', className)} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-medium text-ink">{t.title}</p>
+              {t.detail && <p className="mt-0.5 text-[13px] break-words text-ink-2">{t.detail}</p>}
+              {t.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    t.action?.onClick()
+                    dismiss(t.id)
+                  }}
+                  className="mt-1.5 text-[13px] font-semibold text-brand-text hover:underline"
+                >
+                  {t.action.label}
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => dismiss(t.id)}
+              className="-mr-1 inline-flex size-6 items-center justify-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink"
+              aria-label="Dismiss notification"
+            >
+              <X aria-hidden className="size-4" />
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }

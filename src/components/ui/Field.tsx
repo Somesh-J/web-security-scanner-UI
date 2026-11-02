@@ -1,4 +1,5 @@
 import * as RadixSwitch from '@radix-ui/react-switch'
+import { ChevronDown, CircleAlert } from 'lucide-react'
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
 import { cn } from '@/lib/cn'
 
@@ -19,17 +20,17 @@ interface FieldShellProps {
 function FieldShell({ id, label, hint, error, children, className }: FieldShellProps) {
   return (
     <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
-      <label htmlFor={id} className="label">
+      <label htmlFor={id} className="text-[13px] font-medium text-ink">
         {label}
       </label>
       {children}
       {error ? (
-        <p id={`${id}-error`} role="alert" className="font-mono text-[12px] text-signal">
-          <span aria-hidden>! </span>
+        <p id={`${id}-error`} role="alert" className="flex items-start gap-1.5 text-[13px] text-danger">
+          <CircleAlert aria-hidden className="mt-[3px] size-3.5 shrink-0" />
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-[12px] text-ash">
+        <p id={`${id}-hint`} className="text-[13px] text-ink-3">
           {hint}
         </p>
       ) : null}
@@ -38,7 +39,7 @@ function FieldShell({ id, label, hint, error, children, className }: FieldShellP
 }
 
 const controlClass =
-  'h-10 w-full min-w-0 border bg-void px-3 font-mono text-[13px] text-bone placeholder:text-smoke transition-colors focus:border-live focus:outline-none focus-visible:outline-none disabled:opacity-60'
+  'h-10 w-full min-w-0 rounded-md border bg-surface px-3 text-[14px] text-ink placeholder:text-ink-3 transition-[border-color,box-shadow] focus:border-brand focus:ring-3 focus:ring-brand/20 focus:outline-none focus-visible:outline-none disabled:opacity-60'
 
 function describedBy(id: string, error?: string, hint?: ReactNode) {
   if (error) return `${id}-error`
@@ -70,7 +71,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           aria-describedby={describedBy(id, error, hint)}
           className={cn(
             controlClass,
-            error ? 'border-signal' : 'border-wire-2',
+            error ? 'border-danger' : 'border-line-strong',
             trailing ? 'pr-10' : '',
             className,
           )}
@@ -98,32 +99,32 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(funct
   const id = idProp ?? autoId
   return (
     <FieldShell id={id} label={label} hint={hint} error={error}>
-      <select
-        ref={ref}
-        id={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(id, error, hint)}
-        className={cn(
-          controlClass,
-          'cursor-pointer appearance-none bg-no-repeat pr-8',
-          error ? 'border-signal' : 'border-wire-2',
-          className,
-        )}
-        style={{
-          backgroundImage:
-            'linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%)',
-          backgroundPosition: 'calc(100% - 16px) 50%, calc(100% - 11px) 50%',
-          backgroundSize: '5px 5px, 5px 5px',
-        }}
-        {...rest}
-      >
-        {placeholder && <option value="">{placeholder}</option>}
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <div className="relative">
+        <select
+          ref={ref}
+          id={id}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy(id, error, hint)}
+          className={cn(
+            controlClass,
+            'cursor-pointer appearance-none pr-9',
+            error ? 'border-danger' : 'border-line-strong',
+            className,
+          )}
+          {...rest}
+        >
+          {placeholder && <option value="">{placeholder}</option>}
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-ink-3"
+        />
+      </div>
     </FieldShell>
   )
 })
@@ -144,11 +145,11 @@ export function Switch({ id: idProp, label, description, checked, onCheckedChang
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <label htmlFor={id} className="cursor-pointer text-[13px] font-medium text-bone">
+        <label htmlFor={id} className="cursor-pointer text-[14px] font-medium text-ink">
           {label}
         </label>
         {description && (
-          <p id={`${id}-desc`} className="mt-0.5 text-[12px] text-ash">
+          <p id={`${id}-desc`} className="mt-0.5 text-[13px] text-ink-3">
             {description}
           </p>
         )}
@@ -159,10 +160,9 @@ export function Switch({ id: idProp, label, description, checked, onCheckedChang
         onCheckedChange={onCheckedChange}
         disabled={disabled}
         aria-describedby={description ? `${id}-desc` : undefined}
-        className="group shrink-0 cursor-pointer px-1 font-mono text-[12px] font-semibold whitespace-pre text-ash hover:bg-panel-2 disabled:opacity-50 data-[state=checked]:bg-bone data-[state=checked]:text-void"
+        className="relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-line-strong transition-colors disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-brand"
       >
-        {/* Terminal toggle: [ on] / [off]. Radix still provides role="switch" and aria-checked. */}
-        <span aria-hidden>{checked ? '[ on]' : '[off]'}</span>
+        <RadixSwitch.Thumb className="block size-5 translate-x-0.5 rounded-full bg-white shadow-sm transition-transform duration-150 data-[state=checked]:translate-x-[22px]" />
       </RadixSwitch.Root>
     </div>
   )
