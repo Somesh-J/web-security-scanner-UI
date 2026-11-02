@@ -1,12 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { CircleAlert, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { errorMessage } from '@/api/client'
 import { useCreateTarget, useUpdateTarget } from '@/api/queries'
 import { Button } from '@/components/ui/Button'
 import { Dialog, DialogBody, DialogFooter } from '@/components/ui/Dialog'
-import { SelectField, Switch, TextField } from '@/components/ui/Field'
-import { ENV_LABEL } from '@/lib/labels'
+import { Switch, TextField } from '@/components/ui/Field'
+import { cn } from '@/lib/cn'
+import { ENV_HELP, ENV_LABEL } from '@/lib/labels'
 import { targetFormSchema, type TargetFormValues } from '@/lib/schemas'
 import { ENVIRONMENTS, type Target, type TargetInput } from '@/types/domain'
 
@@ -26,15 +28,14 @@ const EMPTY: TargetFormValues = {
   password: '',
 }
 
-/** Add and edit share one validated form. Credentials are only sent when "authenticated scan" is on. */
+/** Add and edit share one validated form. Credentials are only sent when "needs a login" is on. */
 export function TargetFormDialog({ open, onOpenChange, target }: TargetFormDialogProps) {
   return (
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      eyebrow={target ? `targets/${target.id}/edit` : 'targets/new'}
-      title={target ? `Edit ${target.name}` : 'Add target'}
-      description="A website or API you have written permission to test."
+      title={target ? `Edit ${target.name}` : 'Add a website'}
+      description="Tell us which site or API to scan. You can change this later."
     >
       {/* Mounted only while open: the form initialises from `target` each time, with no reset effect. */}
       <TargetForm target={target ?? null} onDone={() => onOpenChange(false)} />
@@ -71,6 +72,7 @@ function TargetForm({ target, onDone }: { target: Target | null; onDone: () => v
       : EMPTY,
   })
   const authenticated = useWatch({ control, name: 'authenticated' })
+  const environment = useWatch({ control, name: 'environment' })
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null)
@@ -97,7 +99,12 @@ function TargetForm({ target, onDone }: { target: Target | null; onDone: () => v
   return (
     <>
       <DialogBody>
-        <form id="target-form" noValidate onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-4">
+        <form
+          id="target-form"
+          noValidate
+          onSubmit={(e) => void onSubmit(e)}
+          className="flex flex-col gap-5 pb-4"
+        >
           <TextField
             label="Display name"
             placeholder="Acme Store"
@@ -106,33 +113,66 @@ function TargetForm({ target, onDone }: { target: Target | null; onDone: () => v
             {...register('name')}
           />
           <TextField
-            label="URL"
+            label="Website address"
             type="url"
             inputMode="url"
             placeholder="https://shop.example.com"
             autoComplete="off"
             spellCheck={false}
             error={errors.url?.message}
-            hint="The scanner starts crawling from this address."
+            hint="The full address, starting with https://. The scan starts from this page."
             {...register('url')}
           />
-          <SelectField
-            label="Environment"
-            error={errors.environment?.message}
-            options={ENVIRONMENTS.map((e) => ({ value: e, label: ENV_LABEL[e] }))}
-            {...register('environment')}
-          />
+          <fieldset>
+            <legend className="text-[13px] font-medium text-ink">Environment</legend>
+            <div className="mt-1.5 grid gap-2 sm:grid-cols-3">
+              {ENVIRONMENTS.map((env) => {
+                const checked = environment === env
+                return (
+                  <label
+                    key={env}
+                    className={cn(
+                      'flex cursor-pointer flex-col gap-0.5 rounded-md border px-3 py-2.5 transition-colors has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-brand/30',
+                      checked
+                        ? 'border-brand bg-brand-soft'
+                        : 'border-line-strong bg-surface hover:bg-surface-2',
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="environment"
+                      value={env}
+                      className="sr-only"
+                      checked={checked}
+                      onChange={() =>
+                        setValue('environment', env, { shouldDirty: true, shouldValidate: true })
+                      }
+                    />
+                    <span className={cn('text-[14px] font-medium', checked ? 'text-brand-text' : 'text-ink')}>
+                      {ENV_LABEL[env]}
+                    </span>
+                    <span className="text-[12.5px] leading-snug text-ink-3">{ENV_HELP[env]}</span>
+                  </label>
+                )
+              })}
+            </div>
+            {errors.environment?.message && (
+              <p role="alert" className="mt-1.5 text-[13px] text-danger">
+                {errors.environment.message}
+              </p>
+            )}
+          </fieldset>
 
-          <div className="rounded-xs border border-wire px-3 py-3">
+          <div className="rounded-lg border border-line bg-surface-2/50 px-4 py-3.5">
             <Switch
-              label="Authenticated scan"
-              description="Log in first so the scanner can test pages behind the login."
+              label="This site needs a login to scan"
+              description="Turn on if important pages are behind a sign-in. Clearsite will log in first, then scan."
               checked={authenticated}
               onCheckedChange={(on) => setValue('authenticated', on, { shouldDirty: true })}
             />
             {/* Height transition on reveal. Fields unmount when off, so they are neither validated nor sent. */}
             <div
-              className="grid transition-[grid-template-rows] duration-150 ease-out"
+              className="grid transition-[grid-template-rows] duration-200 ease-out"
               style={{ gridTemplateRows: authenticated ? '1fr' : '0fr' }}
             >
               <div className="min-h-0 overflow-hidden">
@@ -149,21 +189,25 @@ function TargetForm({ target, onDone }: { target: Target | null; onDone: () => v
                       label="Password"
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="new-password"
-                      placeholder={target?.authenticated ? 'leave blank to keep' : '••••••••'}
+                      placeholder={target?.authenticated ? 'Leave blank to keep' : '••••••••'}
                       error={errors.password?.message}
                       hint={
                         target?.authenticated
                           ? 'Blank keeps the stored password.'
-                          : 'Stored encrypted. Never shown again.'
+                          : 'Stored securely and never shown again.'
                       }
                       trailing={
                         <button
                           type="button"
                           onClick={() => setShowPassword((s) => !s)}
-                          className="rounded-xs px-1.5 py-0.5 font-mono text-[10.5px] text-ash hover:text-bone"
+                          className="inline-flex size-8 items-center justify-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink"
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
-                          {showPassword ? 'hide' : 'show'}
+                          {showPassword ? (
+                            <EyeOff aria-hidden className="size-4" />
+                          ) : (
+                            <Eye aria-hidden className="size-4" />
+                          )}
                         </button>
                       }
                       {...register('password')}
@@ -177,11 +221,17 @@ function TargetForm({ target, onDone }: { target: Target | null; onDone: () => v
           {serverError && (
             <p
               role="alert"
-              className="rounded-xs border border-signal/50 bg-signal/10 px-3 py-2 font-mono text-[12px] text-signal"
+              className="flex items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-3 py-2.5 text-[13px] text-danger"
             >
-              ! {serverError}
+              <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+              {serverError}
             </p>
           )}
+
+          <p className="flex items-start gap-2 text-[13px] text-ink-3">
+            <ShieldCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-success" />
+            Only add sites you own or have permission to test.
+          </p>
         </form>
       </DialogBody>
       <DialogFooter>
@@ -189,7 +239,7 @@ function TargetForm({ target, onDone }: { target: Target | null; onDone: () => v
           Cancel
         </Button>
         <Button variant="primary" type="submit" form="target-form" loading={pending}>
-          {target ? 'Save changes' : 'Add target'}
+          {target ? 'Save changes' : 'Add website'}
         </Button>
       </DialogFooter>
     </>
