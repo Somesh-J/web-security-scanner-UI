@@ -41,3 +41,9 @@ export function formatRelative(iso: string | null, now: number = Date.now()): st
 export function pluralize(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`
 }
+
+/** "[#######.....]" — the nmap-style text readout that sits beside the real bar. */
+export function asciiBar(progress: number, width = 12): string {
+  const filled = Math.round((Math.min(100, Math.max(0, progress)) / 100) * width)
+  return `[${'#'.repeat(filled)}${'.'.repeat(width - filled)}]`
+}
