@@ -143,9 +143,7 @@ CI (`.github/workflows/ci.yml`) runs typecheck, lint, format check, tests and bu
 ## Known gaps
 
 - No real authentication, authorisation or session expiry.
-- No end-to-end browser tests (Playwright); coverage is unit + component integration.
 - Saved views and prompt history are per-browser (localStorage), not per-account.
-- The PDF is a plain monospace layout without charts.
 - Bulk actions apply one status to all selected rows; there is no undo beyond changing the status back.
 
 ## Project structure
