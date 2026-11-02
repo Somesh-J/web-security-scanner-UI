@@ -26,14 +26,27 @@ type FilterFacet = 'severity' | 'status' | 'category' | 'cwe' | 'target' | 'scan
 
 function matchesText(f: Finding, words: string[], ctx: QueryContext): boolean {
   if (!words.length) return true
-  const haystack = [f.id, f.title, f.cwe, f.category, f.location, ctx.targetNames.get(f.targetId) ?? '', f.scanId]
+  const haystack = [
+    f.id,
+    f.title,
+    f.cwe,
+    f.category,
+    f.location,
+    ctx.targetNames.get(f.targetId) ?? '',
+    f.scanId,
+  ]
     .join(' ')
     .toLowerCase()
   return words.every((w) => haystack.includes(w))
 }
 
 /** Applies every filter except `skip`. Skipping one facet is how chip counts are computed. */
-function filterFindings(findings: Finding[], q: FindingsQuery, ctx: QueryContext, skip?: FilterFacet): Finding[] {
+function filterFindings(
+  findings: Finding[],
+  q: FindingsQuery,
+  ctx: QueryContext,
+  skip?: FilterFacet,
+): Finding[] {
   const words = q.text.toLowerCase().split(/\s+/).filter(Boolean)
   const sev = new Set(q.severity)
   const status = new Set(q.status)
@@ -66,7 +79,9 @@ function compareBy(key: SortKey, a: Finding, b: Finding, ctx: QueryContext): num
     case 'category':
       return a.category.localeCompare(b.category)
     case 'target':
-      return (ctx.targetNames.get(a.targetId) ?? a.targetId).localeCompare(ctx.targetNames.get(b.targetId) ?? b.targetId)
+      return (ctx.targetNames.get(a.targetId) ?? a.targetId).localeCompare(
+        ctx.targetNames.get(b.targetId) ?? b.targetId,
+      )
     case 'title':
       return a.title.localeCompare(b.title)
   }

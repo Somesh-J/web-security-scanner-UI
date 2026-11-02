@@ -1,13 +1,8 @@
 import { delay, http, HttpResponse } from 'msw'
 import { findingStatusSchema, loginSchema, targetPayloadSchema } from '@/lib/schemas'
+import { DEMO_ACCOUNT, FAULT_KEY } from '@/lib/demo'
 import type { Session } from '@/types/domain'
 import { ApiFailure, createDb, type MockDb } from './db'
-
-/** The one demo account. Any other credentials get a 401, which shows the "bad credentials" state. */
-export const DEMO_ACCOUNT = { email: 'op@redcell.io', password: 'redteam-2026' }
-
-/** Settings > "Simulate API outage" writes this key. While it is set, every data GET returns 500. */
-export const FAULT_KEY = 'redcell:fault'
 
 interface HandlerOptions {
   db?: MockDb

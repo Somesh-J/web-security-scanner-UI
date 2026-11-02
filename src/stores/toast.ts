@@ -30,6 +30,7 @@ export const useToastStore = create<ToastState>()((set, get) => ({
 /** Shorthand usable outside React components (for example in mutation callbacks). */
 export const toast = {
   info: (title: string, detail?: string) => useToastStore.getState().push({ tone: 'info', title, detail }),
-  success: (title: string, detail?: string) => useToastStore.getState().push({ tone: 'success', title, detail }),
+  success: (title: string, detail?: string) =>
+    useToastStore.getState().push({ tone: 'success', title, detail }),
   error: (title: string, detail?: string) => useToastStore.getState().push({ tone: 'error', title, detail }),
 }

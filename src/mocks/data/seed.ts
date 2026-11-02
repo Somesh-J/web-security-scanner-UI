@@ -64,19 +64,80 @@ interface ScanSpec {
 }
 
 const TARGETS: Omit<TargetRecord, 'createdAt'>[] = [
-  { id: 'tgt_01', name: 'Acme Store', url: 'https://shop.example.com', environment: 'staging', authenticated: true, username: 'qa-scanner' },
-  { id: 'tgt_02', name: 'Billing API', url: 'https://api.billing.example.com', environment: 'production', authenticated: true, username: 'svc-redcell' },
-  { id: 'tgt_03', name: 'Partner Portal', url: 'https://partners.example.com', environment: 'production', authenticated: true, username: 'partner01' },
-  { id: 'tgt_04', name: 'Marketing Site', url: 'https://www.example.com', environment: 'production', authenticated: false, username: null },
-  { id: 'tgt_05', name: 'Docs Portal', url: 'https://docs.example.com', environment: 'staging', authenticated: false, username: null },
-  { id: 'tgt_06', name: 'Mobile Gateway', url: 'https://gw.dev.example.com', environment: 'dev', authenticated: true, username: 'mobile-ci' },
-  { id: 'tgt_07', name: 'Admin Console', url: 'https://admin.staging.example.com', environment: 'staging', authenticated: true, username: 'pentest' },
-  { id: 'tgt_08', name: 'Careers Site', url: 'https://careers.example.com', environment: 'production', authenticated: false, username: null },
+  {
+    id: 'tgt_01',
+    name: 'Acme Store',
+    url: 'https://shop.example.com',
+    environment: 'staging',
+    authenticated: true,
+    username: 'qa-scanner',
+  },
+  {
+    id: 'tgt_02',
+    name: 'Billing API',
+    url: 'https://api.billing.example.com',
+    environment: 'production',
+    authenticated: true,
+    username: 'svc-redcell',
+  },
+  {
+    id: 'tgt_03',
+    name: 'Partner Portal',
+    url: 'https://partners.example.com',
+    environment: 'production',
+    authenticated: true,
+    username: 'partner01',
+  },
+  {
+    id: 'tgt_04',
+    name: 'Marketing Site',
+    url: 'https://www.example.com',
+    environment: 'production',
+    authenticated: false,
+    username: null,
+  },
+  {
+    id: 'tgt_05',
+    name: 'Docs Portal',
+    url: 'https://docs.example.com',
+    environment: 'staging',
+    authenticated: false,
+    username: null,
+  },
+  {
+    id: 'tgt_06',
+    name: 'Mobile Gateway',
+    url: 'https://gw.dev.example.com',
+    environment: 'dev',
+    authenticated: true,
+    username: 'mobile-ci',
+  },
+  {
+    id: 'tgt_07',
+    name: 'Admin Console',
+    url: 'https://admin.staging.example.com',
+    environment: 'staging',
+    authenticated: true,
+    username: 'pentest',
+  },
+  {
+    id: 'tgt_08',
+    name: 'Careers Site',
+    url: 'https://careers.example.com',
+    environment: 'production',
+    authenticated: false,
+    username: null,
+  },
 ]
 
 const SCANS: ScanSpec[] = [
   {
-    id: 'scan_101', targetId: 'tgt_04', daysAgo: 27, hour: 8, status: 'completed', durationSec: 512,
+    id: 'scan_101',
+    targetId: 'tgt_04',
+    daysAgo: 27,
+    hour: 8,
+    status: 'completed',
+    durationSec: 512,
     findings: [
       { key: 'xss-contact', status: 'resolved', at: 3 },
       { key: 'tls-cert', status: 'resolved', at: 1 },
@@ -84,7 +145,12 @@ const SCANS: ScanSpec[] = [
     ],
   },
   {
-    id: 'scan_103', targetId: 'tgt_05', daysAgo: 24, hour: 14, status: 'completed', durationSec: 905,
+    id: 'scan_103',
+    targetId: 'tgt_05',
+    daysAgo: 24,
+    hour: 14,
+    status: 'completed',
+    durationSec: 905,
     findings: [
       { key: 'log4shell', status: 'resolved', at: 6 },
       { key: 'ssti-search', status: 'confirmed', at: 9 },
@@ -92,7 +158,12 @@ const SCANS: ScanSpec[] = [
     ],
   },
   {
-    id: 'scan_105', targetId: 'tgt_01', daysAgo: 20, hour: 9, status: 'completed', durationSec: 688,
+    id: 'scan_105',
+    targetId: 'tgt_01',
+    daysAgo: 20,
+    hour: 9,
+    status: 'completed',
+    durationSec: 688,
     findings: [
       { key: 'idor-orders', status: 'resolved', at: 4 },
       { key: 'csp-missing', status: 'open', at: 1 },
@@ -100,9 +171,23 @@ const SCANS: ScanSpec[] = [
       { key: 'hsts-missing', status: 'open', at: 1 },
     ],
   },
-  { id: 'scan_107', targetId: 'tgt_06', daysAgo: 16, hour: 11, status: 'failed', durationSec: 94, progress: 23, findings: [] },
   {
-    id: 'scan_109', targetId: 'tgt_03', daysAgo: 13, hour: 10, status: 'completed', durationSec: 1340,
+    id: 'scan_107',
+    targetId: 'tgt_06',
+    daysAgo: 16,
+    hour: 11,
+    status: 'failed',
+    durationSec: 94,
+    progress: 23,
+    findings: [],
+  },
+  {
+    id: 'scan_109',
+    targetId: 'tgt_03',
+    daysAgo: 13,
+    hour: 10,
+    status: 'completed',
+    durationSec: 1340,
     findings: [
       { key: 'ssrf-webhook', status: 'confirmed', at: 14 },
       { key: 'xxe-import', status: 'open', at: 18 },
@@ -113,7 +198,12 @@ const SCANS: ScanSpec[] = [
     ],
   },
   {
-    id: 'scan_111', targetId: 'tgt_02', daysAgo: 10, hour: 7, status: 'completed', durationSec: 1105,
+    id: 'scan_111',
+    targetId: 'tgt_02',
+    daysAgo: 10,
+    hour: 7,
+    status: 'completed',
+    durationSec: 1105,
     findings: [
       { key: 'bola-invoices', status: 'confirmed', at: 8 },
       { key: 'jwt-none', status: 'resolved', at: 5 },
@@ -125,7 +215,12 @@ const SCANS: ScanSpec[] = [
     ],
   },
   {
-    id: 'scan_113', targetId: 'tgt_07', daysAgo: 7, hour: 16, status: 'completed', durationSec: 980,
+    id: 'scan_113',
+    targetId: 'tgt_07',
+    daysAgo: 7,
+    hour: 16,
+    status: 'completed',
+    durationSec: 980,
     findings: [
       { key: 'default-creds', status: 'resolved', at: 1 },
       { key: 'path-traversal', status: 'confirmed', at: 6 },
@@ -137,7 +232,12 @@ const SCANS: ScanSpec[] = [
     ],
   },
   {
-    id: 'scan_114', targetId: 'tgt_06', daysAgo: 5, hour: 13, status: 'completed', durationSec: 761,
+    id: 'scan_114',
+    targetId: 'tgt_06',
+    daysAgo: 5,
+    hour: 13,
+    status: 'completed',
+    durationSec: 761,
     findings: [
       { key: 'ssrf-image', status: 'open', at: 7 },
       { key: 'hardcoded-key', status: 'confirmed', at: 1 },
@@ -147,7 +247,12 @@ const SCANS: ScanSpec[] = [
     ],
   },
   {
-    id: 'scan_116', targetId: 'tgt_04', daysAgo: 3, hour: 10, status: 'completed', durationSec: 433,
+    id: 'scan_116',
+    targetId: 'tgt_04',
+    daysAgo: 3,
+    hour: 10,
+    status: 'completed',
+    durationSec: 433,
     findings: [
       { key: 'wp-plugin', status: 'open', at: 2 },
       { key: 'sri-missing', status: 'open', at: 1 },
@@ -157,7 +262,12 @@ const SCANS: ScanSpec[] = [
     ],
   },
   {
-    id: 'scan_118', targetId: 'tgt_01', daysAgo: 1, hour: 9, status: 'completed', durationSec: 742,
+    id: 'scan_118',
+    targetId: 'tgt_01',
+    daysAgo: 1,
+    hour: 9,
+    status: 'completed',
+    durationSec: 742,
     findings: [
       { key: 'sqli-search', status: 'open', at: 6, id: 'fnd_5231' },
       { key: 'xss-reflected', status: 'open', at: 4 },
@@ -257,7 +367,14 @@ export function createSeed(now: number = Date.now()): DbState {
     const target = targets.find((t) => t.id === scan?.targetId)
     const count = findings.filter((f) => f.scanId === scanId && f.severity !== 'info').length
     const created = new Date(scan?.startedAt ?? now).getTime() + hoursAfter * 60 * MIN
-    return { id, scanId, target: target?.name ?? 'Unknown', createdAt: new Date(created).toISOString(), findings: count, format: 'pdf' }
+    return {
+      id,
+      scanId,
+      target: target?.name ?? 'Unknown',
+      createdAt: new Date(created).toISOString(),
+      findings: count,
+      format: 'pdf',
+    }
   }
 
   const reports: Report[] = [

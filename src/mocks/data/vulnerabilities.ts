@@ -93,7 +93,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'POST /login',
     description:
       'The session cookie is readable from JavaScript. Combined with any XSS flaw, an attacker can steal the session token directly.',
-    remediation: 'Set HttpOnly, Secure and SameSite=Lax on the session cookie in the framework session config.',
+    remediation:
+      'Set HttpOnly, Secure and SameSite=Lax on the session cookie in the framework session config.',
     evidence: (h) => ({
       request: `POST /login HTTP/1.1\nHost: ${h}\nContent-Type: application/x-www-form-urlencoded\n\nemail=qa%40example.com&password=********`,
       response: `HTTP/1.1 302 Found\nLocation: /account\nSet-Cookie: session=8f2c1e0b9a7d4f6e; Path=/; Secure`,
@@ -155,7 +156,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /login?next=',
     description:
       'The next parameter accepts any absolute URL. Attackers can use the trusted domain to send victims to a phishing page right after they sign in.',
-    remediation: 'Only accept relative paths for next, or check the host against an allow-list before redirecting.',
+    remediation:
+      'Only accept relative paths for next, or check the host against an allow-list before redirecting.',
     evidence: (h) => ({
       request: `GET /login?next=https://evil.example/login HTTP/1.1\nHost: ${h}\nCookie: session=8f2c1e0b9a7d4f6e`,
       response: `HTTP/1.1 302 Found\nLocation: https://evil.example/login`,
@@ -170,7 +172,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /static/js/vendor/jquery.min.js',
     description:
       'The site loads jQuery 1.12.4, which is affected by CVE-2020-11022 and CVE-2020-11023. Passing untrusted HTML to jQuery DOM methods can run script.',
-    remediation: 'Upgrade to jQuery 3.7 or later and add dependency scanning to CI so outdated libraries fail the build.',
+    remediation:
+      'Upgrade to jQuery 3.7 or later and add dependency scanning to CI so outdated libraries fail the build.',
     evidence: (h) => ({
       request: `GET /static/js/vendor/jquery.min.js HTTP/1.1\nHost: ${h}\n${UA}`,
       response: `HTTP/1.1 200 OK\nContent-Type: application/javascript\n\n/*! jQuery v1.12.4 | (c) jQuery Foundation | jquery.org/license */\n!function(a,b){"object"==typeof module&&...`,
@@ -216,7 +219,7 @@ export const VULNS: readonly VulnTemplate[] = [
     cwe: 'CWE-639',
     location: 'GET /v2/invoices/{invoiceId}',
     description:
-      "The invoice endpoint returns any invoice to any authenticated API client. Using a low-privilege tenant key, the scanner downloaded invoices that belong to other tenants, including bank details.",
+      'The invoice endpoint returns any invoice to any authenticated API client. Using a low-privilege tenant key, the scanner downloaded invoices that belong to other tenants, including bank details.',
     remediation:
       "Check tenant ownership in the data-access layer so every query is scoped by tenant ID. Add an automated test that requests another tenant's object and expects 404.",
     evidence: (h) => ({
@@ -265,7 +268,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'POST /v2/cards/verify',
     description:
       'The scanner sent 500 card verification requests in 30 seconds with no throttling. The endpoint can be used to test stolen card numbers.',
-    remediation: 'Rate-limit per API key and per IP, add back-off after failures, and alert on bursts of declines.',
+    remediation:
+      'Rate-limit per API key and per IP, add back-off after failures, and alert on bursts of declines.',
     evidence: (h) => ({
       request: `POST /v2/cards/verify HTTP/1.1\nHost: ${h}\nContent-Type: application/json\n\n{"pan":"4000 0000 0000 0002","exp":"12/29","cvc":"***"}\n\n# request 500 of 500 in 30s`,
       response: `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"result":"declined","reason":"insufficient_funds"}\n\n# no 429 received`,
@@ -280,7 +284,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'TLS :443',
     description:
       'The server still negotiates TLS 1.0 and CBC-mode ciphers with SHA-1. These are deprecated and open to downgrade attacks.',
-    remediation: 'Allow only TLS 1.2 and 1.3 with AEAD ciphers. Use the Mozilla "intermediate" configuration as a baseline.',
+    remediation:
+      'Allow only TLS 1.2 and 1.3 with AEAD ciphers. Use the Mozilla "intermediate" configuration as a baseline.',
     evidence: (h) => ({
       request: `ClientHello\n  host: ${h}:443\n  version: TLS 1.0\n  ciphers: TLS_RSA_WITH_AES_128_CBC_SHA`,
       response: `ServerHello\n  version: TLS 1.0\n  cipher: TLS_RSA_WITH_AES_128_CBC_SHA\n# handshake completed`,
@@ -343,7 +348,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'POST /catalogue/import',
     description:
       'The XML parser resolves external entities. A crafted upload reads local files from the server and returns them in the import report.',
-    remediation: 'Disable DTD processing and external entity resolution in the XML parser. Prefer JSON for partner imports.',
+    remediation:
+      'Disable DTD processing and external entity resolution in the XML parser. Prefer JSON for partner imports.',
     evidence: (h) => ({
       request: `POST /catalogue/import HTTP/1.1\nHost: ${h}\nContent-Type: application/xml\n\n<?xml version="1.0"?>\n<!DOCTYPE r [<!ENTITY x SYSTEM "file:///etc/passwd">]>\n<catalogue><item><sku>&x;</sku></item></catalogue>`,
       response: `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"imported":0,"errors":["Unknown SKU: root:x:0:0:root:/root:/bin/bash"]}`,
@@ -358,7 +364,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'POST /auth/login',
     description:
       "The pre-login session cookie stays valid after authentication. An attacker who plants a session ID can use the victim's session once they log in.",
-    remediation: 'Issue a new session ID on every privilege change, including login and logout, and invalidate the old one on the server.',
+    remediation:
+      'Issue a new session ID on every privilege change, including login and logout, and invalidate the old one on the server.',
     evidence: (h) => ({
       request: `POST /auth/login HTTP/1.1\nHost: ${h}\nCookie: PSESSIONID=fixated-1234\nContent-Type: application/x-www-form-urlencoded\n\nuser=partner01&pass=********`,
       response: `HTTP/1.1 302 Found\nLocation: /dashboard\n\n# no new Set-Cookie: PSESSIONID=fixated-1234 is now authenticated`,
@@ -371,7 +378,8 @@ export const VULNS: readonly VulnTemplate[] = [
     category: 'A07: Identification and Authentication Failures',
     cwe: 'CWE-521',
     location: 'POST /auth/register',
-    description: 'Registration accepts short, common passwords such as "123456". These accounts are easy to brute force.',
+    description:
+      'Registration accepts short, common passwords such as "123456". These accounts are easy to brute force.',
     remediation:
       'Require at least 12 characters and check new passwords against a breached-password list, following NIST SP 800-63B.',
     evidence: (h) => ({
@@ -419,7 +427,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'POST /admin/login',
     description:
       'The admin console accepts admin / admin. The scanner obtained full administrative access, including user management and configuration.',
-    remediation: 'Remove default accounts, force a unique password on first boot, and put the admin console behind SSO with MFA.',
+    remediation:
+      'Remove default accounts, force a unique password on first boot, and put the admin console behind SSO with MFA.',
     evidence: (h) => ({
       request: `POST /admin/login HTTP/1.1\nHost: ${h}\nContent-Type: application/x-www-form-urlencoded\n\nusername=admin&password=admin`,
       response: `HTTP/1.1 302 Found\nLocation: /admin/overview\nSet-Cookie: admin_sid=3c9e...; Path=/admin; HttpOnly`,
@@ -466,7 +475,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /admin/*',
     description:
       'Admin pages send neither X-Frame-Options nor a frame-ancestors directive, so they can be embedded in a hostile page to trick clicks.',
-    remediation: "Send Content-Security-Policy: frame-ancestors 'none' (or X-Frame-Options: DENY) on all admin responses.",
+    remediation:
+      "Send Content-Security-Policy: frame-ancestors 'none' (or X-Frame-Options: DENY) on all admin responses.",
     evidence: (h) => ({
       request: `GET /admin/users HTTP/1.1\nHost: ${h}\nCookie: admin_sid=3c9e...`,
       response: `HTTP/1.1 200 OK\nContent-Type: text/html\n\n# no X-Frame-Options or frame-ancestors present`,
@@ -481,7 +491,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'POST /admin/login',
     description:
       'Newline characters in the username are written to the audit log as-is, letting an attacker forge log lines and hide activity.',
-    remediation: 'Encode or strip CR and LF before logging, and use structured JSON logging so fields cannot break out.',
+    remediation:
+      'Encode or strip CR and LF before logging, and use structured JSON logging so fields cannot break out.',
     evidence: (h) => ({
       request: `POST /admin/login HTTP/1.1\nHost: ${h}\nContent-Type: application/x-www-form-urlencoded\n\nusername=bob%0a2026-10-28T10:00:00Z%20INFO%20login%20ok%20user=admin&password=x`,
       response: `HTTP/1.1 401 Unauthorized\n\n# audit.log now contains a forged "login ok user=admin" line`,
@@ -494,7 +505,8 @@ export const VULNS: readonly VulnTemplate[] = [
     category: 'A05: Security Misconfiguration',
     cwe: 'CWE-548',
     location: 'GET /backups/',
-    description: 'The web server lists the contents of /backups/, exposing the names and sizes of database dumps.',
+    description:
+      'The web server lists the contents of /backups/, exposing the names and sizes of database dumps.',
     remediation: 'Turn off autoindex and move backups out of the web root.',
     evidence: (h) => ({
       request: `GET /backups/ HTTP/1.1\nHost: ${h}`,
@@ -510,7 +522,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /__debug__/console',
     description:
       'An interactive framework debug console is reachable without authentication. It allows arbitrary code execution on the server.',
-    remediation: 'Build staging with debug tooling turned off, or restrict it to the VPN and require authentication.',
+    remediation:
+      'Build staging with debug tooling turned off, or restrict it to the VPN and require authentication.',
     evidence: (h) => ({
       request: `GET /__debug__/console HTTP/1.1\nHost: ${h}`,
       response: `HTTP/1.1 200 OK\nContent-Type: text/html\n\n<title>Interactive Console</title>\n<p>In this console you can execute Python expressions ...</p>`,
@@ -525,7 +538,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /img?src=',
     description:
       'The image proxy fetches any URL. The scanner reached an internal admin API on the private network through it.',
-    remediation: 'Allow-list image hosts, block private address ranges after DNS resolution, and refuse redirects to new hosts.',
+    remediation:
+      'Allow-list image hosts, block private address ranges after DNS resolution, and refuse redirects to new hosts.',
     evidence: (h) => ({
       request: `GET /img?src=http://10.0.3.12:8080/internal/admin/health HTTP/1.1\nHost: ${h}`,
       response: `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"service":"inventory-admin","version":"3.4.1","db":"ok"}`,
@@ -540,7 +554,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /v1/config',
     description:
       'The public config endpoint used by the mobile app returns a server-side signing secret. Anyone can sign requests as the app.',
-    remediation: 'Rotate the secret now, remove it from client-facing config, and move request signing to the server.',
+    remediation:
+      'Rotate the secret now, remove it from client-facing config, and move request signing to the server.',
     evidence: (h) => ({
       request: `GET /v1/config HTTP/1.1\nHost: ${h}\nX-App-Version: 5.2.0`,
       response: `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"featureFlags":{"newCheckout":true},\n "hmacSecret":"b7f1c9e2a4d8406f9b3e5a1c7d2f8e60"}`,
@@ -570,7 +585,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'POST /v1/auth/login',
     description:
       'The login handler passes JSON straight into a MongoDB query. Sending {"$ne": null} as the password logs in as the first user.',
-    remediation: 'Validate request bodies against a schema that only allows strings, and use a query builder that rejects operator keys.',
+    remediation:
+      'Validate request bodies against a schema that only allows strings, and use a query builder that rejects operator keys.',
     evidence: (h) => ({
       request: `POST /v1/auth/login HTTP/1.1\nHost: ${h}\nContent-Type: application/json\n\n{"email":"admin@example.com","password":{"$ne":null}}`,
       response: `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{"token":"eyJhbGciOiJIUzI1NiJ9...","user":{"email":"admin@example.com","role":"admin"}}`,
@@ -601,7 +617,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /wp-content/plugins/contact-form-7/readme.txt',
     description:
       'Contact Form 7 5.3.1 is affected by CVE-2020-35489, an unrestricted file upload that can lead to remote code execution.',
-    remediation: 'Update the plugin to the latest release, remove unused plugins, and turn on automatic security updates.',
+    remediation:
+      'Update the plugin to the latest release, remove unused plugins, and turn on automatic security updates.',
     evidence: (h) => ({
       request: `GET /wp-content/plugins/contact-form-7/readme.txt HTTP/1.1\nHost: ${h}`,
       response: `HTTP/1.1 200 OK\nContent-Type: text/plain\n\n=== Contact Form 7 ===\nStable tag: 5.3.1\nRequires at least: 5.4`,
@@ -616,7 +633,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /',
     description:
       'Chat and analytics scripts load from third-party CDNs without integrity hashes. A compromised CDN could inject code into every page.',
-    remediation: 'Add integrity and crossorigin attributes to third-party script tags, or self-host the scripts.',
+    remediation:
+      'Add integrity and crossorigin attributes to third-party script tags, or self-host the scripts.',
     evidence: (h) => ({
       request: `GET / HTTP/1.1\nHost: ${h}`,
       response: `HTTP/1.1 200 OK\nContent-Type: text/html\n\n<script src="https://cdn.widgets.example/chat.js"></script>\n<!-- no integrity attribute -->`,
@@ -629,8 +647,10 @@ export const VULNS: readonly VulnTemplate[] = [
     category: 'A03: Injection',
     cwe: 'CWE-79',
     location: 'GET /campaign#',
-    description: 'Campaign page JavaScript writes location.hash into innerHTML. A crafted link runs script on the marketing domain.',
-    remediation: 'Use textContent instead of innerHTML for untrusted values, and add a CSP with Trusted Types.',
+    description:
+      'Campaign page JavaScript writes location.hash into innerHTML. A crafted link runs script on the marketing domain.',
+    remediation:
+      'Use textContent instead of innerHTML for untrusted values, and add a CSP with Trusted Types.',
     evidence: (h) => ({
       request: `GET /campaign#<img src=x onerror=alert(1)> HTTP/1.1\nHost: ${h}`,
       response: `HTTP/1.1 200 OK\nContent-Type: text/html\n\n<script>\n  banner.innerHTML = decodeURIComponent(location.hash.slice(1))\n</script>`,
@@ -643,7 +663,8 @@ export const VULNS: readonly VulnTemplate[] = [
     category: 'A02: Cryptographic Failures',
     cwe: 'CWE-311',
     location: 'GET /newsletter',
-    description: 'The newsletter form on an HTTPS page posts to an HTTP URL, sending email addresses in clear text.',
+    description:
+      'The newsletter form on an HTTPS page posts to an HTTP URL, sending email addresses in clear text.',
     remediation: 'Change the form action to HTTPS and add upgrade-insecure-requests to the CSP.',
     evidence: (h) => ({
       request: `GET /newsletter HTTP/1.1\nHost: ${h}`,
@@ -659,7 +680,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /robots.txt',
     description:
       'robots.txt lists unlinked paths such as /wp-admin-old/ and /staging-preview/, which points attackers at interesting areas.',
-    remediation: 'Do not rely on robots.txt to hide content. Protect sensitive paths with authentication and remove stale ones.',
+    remediation:
+      'Do not rely on robots.txt to hide content. Protect sensitive paths with authentication and remove stale ones.',
     evidence: (h) => ({
       request: `GET /robots.txt HTTP/1.1\nHost: ${h}`,
       response: `HTTP/1.1 200 OK\nContent-Type: text/plain\n\nUser-agent: *\nDisallow: /wp-admin-old/\nDisallow: /staging-preview/`,
@@ -733,7 +755,8 @@ export const VULNS: readonly VulnTemplate[] = [
     location: 'GET /search?q=',
     description:
       'The search query is rendered as a template. {{7*7}} evaluates to 49, and further payloads can reach the template engine runtime.',
-    remediation: 'Pass user input as template data, never as template source. Use a sandboxed template environment.',
+    remediation:
+      'Pass user input as template data, never as template source. Use a sandboxed template environment.',
     evidence: (h) => ({
       request: `GET /search?q=%7B%7B7*7%7D%7D HTTP/1.1\nHost: ${h}`,
       response: `HTTP/1.1 200 OK\nContent-Type: text/html\n\n<h2>Results for 49</h2>`,

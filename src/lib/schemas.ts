@@ -7,7 +7,11 @@ import { ENVIRONMENTS, FINDING_STATUSES } from '@/types/domain'
  */
 
 export const loginSchema = z.object({
-  email: z.string().trim().min(1, 'Enter your operator email.').email('That email is not valid. Check for typos.'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Enter your operator email.')
+    .email('That email is not valid. Check for typos.'),
   password: z.string().min(1, 'Enter your passphrase.').min(8, 'Passphrases are at least 8 characters.'),
 })
 export type LoginValues = z.infer<typeof loginSchema>
@@ -43,7 +47,11 @@ export function targetFormSchema(mode: 'create' | 'edit') {
     .superRefine((value, ctx) => {
       if (!value.authenticated) return
       if (!value.username) {
-        ctx.addIssue({ code: 'custom', path: ['username'], message: 'Enter the username the scanner logs in with.' })
+        ctx.addIssue({
+          code: 'custom',
+          path: ['username'],
+          message: 'Enter the username the scanner logs in with.',
+        })
       }
       if (mode === 'create' && !value.password) {
         ctx.addIssue({ code: 'custom', path: ['password'], message: 'Enter the password for that account.' })

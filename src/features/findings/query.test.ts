@@ -72,7 +72,9 @@ describe('prompt parsing', () => {
   })
 
   it('parses keys, aliases and free text together', () => {
-    const { query, issues } = parsePrompt('sev:crit,med status:fp cat:3 cwe:89 sort:-date,title search page:2')
+    const { query, issues } = parsePrompt(
+      'sev:crit,med status:fp cat:3 cwe:89 sort:-date,title search page:2',
+    )
     expect(issues).toEqual([])
     expect(query.severity).toEqual(['critical', 'medium'])
     expect(query.status).toEqual(['false_positive'])

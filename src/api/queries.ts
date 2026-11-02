@@ -1,6 +1,15 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/stores/toast'
-import type { Finding, FindingStatus, LoginInput, Report, Scan, Session, Target, TargetInput } from '@/types/domain'
+import type {
+  Finding,
+  FindingStatus,
+  LoginInput,
+  Report,
+  Scan,
+  Session,
+  Target,
+  TargetInput,
+} from '@/types/domain'
 import { api, ApiError, errorMessage } from './client'
 
 /**
@@ -67,7 +76,13 @@ export function useUpdateTarget() {
       qc.setQueryData<Target[]>(queryKeys.targets, (old) =>
         old?.map((t) =>
           t.id === id
-            ? { ...t, name: input.name, url: input.url, environment: input.environment, authenticated: input.authenticated }
+            ? {
+                ...t,
+                name: input.name,
+                url: input.url,
+                environment: input.environment,
+                authenticated: input.authenticated,
+              }
             : t,
         ),
       )
@@ -75,7 +90,9 @@ export function useUpdateTarget() {
     },
     onError: (_e, _v, ctx) => qc.setQueryData(queryKeys.targets, ctx?.previous),
     onSuccess: (updated) => {
-      qc.setQueryData<Target[]>(queryKeys.targets, (old) => old?.map((t) => (t.id === updated.id ? updated : t)))
+      qc.setQueryData<Target[]>(queryKeys.targets, (old) =>
+        old?.map((t) => (t.id === updated.id ? updated : t)),
+      )
       toast.success('Target saved', updated.name)
     },
   })
@@ -162,7 +179,9 @@ export function useSetFindingStatus() {
       const idSet = new Set(ids)
       const previousList = qc.getQueryData<Finding[]>(queryKeys.findings)
       const previousDetails = ids.map((id) => [id, qc.getQueryData<Finding>(queryKeys.finding(id))] as const)
-      qc.setQueryData<Finding[]>(queryKeys.findings, (old) => old?.map((f) => (idSet.has(f.id) ? { ...f, status } : f)))
+      qc.setQueryData<Finding[]>(queryKeys.findings, (old) =>
+        old?.map((f) => (idSet.has(f.id) ? { ...f, status } : f)),
+      )
       for (const id of ids) {
         qc.setQueryData<Finding>(queryKeys.finding(id), (old) => (old ? { ...old, status } : old))
       }

@@ -10,7 +10,11 @@ export default tseslint.config(
   { ignores: ['dist', 'public/mockServiceWorker.js', 'coverage'] },
   {
     files: ['**/*.{ts,tsx}'],
-    extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked, jsxA11y.flatConfigs.recommended],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+      jsxA11y.flatConfigs.recommended,
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       globals: globals.browser,
@@ -30,6 +34,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: { attributes: false } }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
+      'jsx-a11y/label-has-associated-control': ['error', { depth: 4 }],
     },
   },
   {

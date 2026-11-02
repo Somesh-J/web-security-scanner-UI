@@ -18,7 +18,9 @@ describe('mock database', () => {
   it('derives openFindings and findingsCount from the findings themselves', () => {
     const { db } = clockedDb()
     const acme = db.listTargets().find((t) => t.id === 'tgt_01')
-    const open = db.listFindings().filter((f) => f.targetId === 'tgt_01' && (f.status === 'open' || f.status === 'confirmed'))
+    const open = db
+      .listFindings()
+      .filter((f) => f.targetId === 'tgt_01' && (f.status === 'open' || f.status === 'confirmed'))
     expect(acme?.openFindings).toBe(open.length)
     const scan118 = db.listScans().find((s) => s.id === 'scan_118')
     expect(scan118?.findingsCount).toEqual({ critical: 1, high: 2, medium: 3, low: 1 })
@@ -51,7 +53,12 @@ describe('mock database', () => {
 
   it('rejects duplicate target URLs and unknown IDs', () => {
     const { db } = clockedDb()
-    const input = { name: 'Dup', url: 'https://shop.example.com/', environment: 'dev' as const, authenticated: false }
+    const input = {
+      name: 'Dup',
+      url: 'https://shop.example.com/',
+      environment: 'dev' as const,
+      authenticated: false,
+    }
     expect(() => db.createTarget(input)).toThrow(/already uses this URL/)
     expect(() => db.updateTarget('tgt_99', input)).toThrow(/does not exist/)
   })
@@ -65,7 +72,12 @@ describe('mock database', () => {
 
   it('only generates reports for completed scans', () => {
     const { db } = clockedDb()
-    expect(db.createReport('scan_118')).toMatchObject({ scanId: 'scan_118', target: 'Acme Store', findings: 7, format: 'pdf' })
+    expect(db.createReport('scan_118')).toMatchObject({
+      scanId: 'scan_118',
+      target: 'Acme Store',
+      findings: 7,
+      format: 'pdf',
+    })
     expect(() => db.createReport('scan_107')).toThrow(/has not completed/)
   })
 

@@ -33,7 +33,10 @@ export interface CommandHelp {
 }
 
 export const COMMAND_HELP: CommandHelp[] = [
-  { usage: 'sev:crit,high status:open sql', description: 'Filter findings (keys: sev status cat cwe target scan sort page size)' },
+  {
+    usage: 'sev:crit,high status:open sql',
+    description: 'Filter findings (keys: sev status cat cwe target scan sort page size)',
+  },
   { usage: 'goto <screen>', description: 'Go to dashboard, targets, scans, findings, reports or settings' },
   { usage: 'open <finding id>', description: 'Open a finding, for example open fnd_5231' },
   { usage: 'scan <target>', description: 'Launch a scan against a target, by name or ID' },
@@ -83,7 +86,9 @@ export function parseCommand(input: string): Command {
     case 'goto':
     case 'cd': {
       const route = ROUTE_ALIASES[arg.toLowerCase().replace(/^[~/]+/, '')]
-      return route ? { kind: 'goto', route } : { kind: 'error', message: `No screen called "${arg}". Try goto findings.` }
+      return route
+        ? { kind: 'goto', route }
+        : { kind: 'error', message: `No screen called "${arg}". Try goto findings.` }
     }
     case 'open': {
       return /^fnd_\d+$/i.test(arg)
@@ -104,7 +109,8 @@ export function parseCommand(input: string): Command {
     }
     default:
       // A bare screen name also navigates ("targets"), which is what most people try first.
-      if (!arg && ROUTE_ALIASES[verb] && !text.includes(':')) return { kind: 'goto', route: ROUTE_ALIASES[verb] }
+      if (!arg && ROUTE_ALIASES[verb] && !text.includes(':'))
+        return { kind: 'goto', route: ROUTE_ALIASES[verb] }
       return { kind: 'query', text }
   }
 }

@@ -18,11 +18,12 @@ export const STORAGE_KEY = 'redcell:mockdb:v1'
 export const QUEUE_DELAY_MS = 4_000
 
 export class ApiFailure extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-  ) {
+  readonly status: number
+
+  constructor(status: number, message: string) {
     super(message)
+    this.name = 'ApiFailure'
+    this.status = status
   }
 }
 
@@ -154,7 +155,9 @@ export function createDb(options: DbOptions = {}) {
 
   function toTarget(target: TargetRecord): Target {
     const finished = state.scans
-      .filter((s) => s.targetId === target.id && (s.status === 'completed' || s.status === 'failed') && s.startedAt)
+      .filter(
+        (s) => s.targetId === target.id && (s.status === 'completed' || s.status === 'failed') && s.startedAt,
+      )
       .map((s) => Date.parse(s.startedAt as string) + (s.durationSec ?? 0) * 1000)
     const last = finished.length ? Math.max(...finished) : null
     return {
@@ -182,7 +185,9 @@ export function createDb(options: DbOptions = {}) {
 
   function assertUniqueUrl(url: string, exceptId?: string) {
     const normalised = url.replace(/\/+$/, '').toLowerCase()
-    const clash = state.targets.find((t) => t.id !== exceptId && t.url.replace(/\/+$/, '').toLowerCase() === normalised)
+    const clash = state.targets.find(
+      (t) => t.id !== exceptId && t.url.replace(/\/+$/, '').toLowerCase() === normalised,
+    )
     if (clash) throw new ApiFailure(409, `${clash.name} already uses this URL.`)
   }
 
@@ -241,14 +246,22 @@ export function createDb(options: DbOptions = {}) {
     listScans(): Scan[] {
       tick()
       const t = now()
-      return [...state.scans].sort((a, b) => Date.parse(b.queuedAt) - Date.parse(a.queuedAt)).map((s) => toScan(s, t))
+      return [...state.scans]
+        .sort((a, b) => Date.parse(b.queuedAt) - Date.parse(a.queuedAt))
+        .map((s) => toScan(s, t))
     },
 
     createScan(targetId: string): Scan {
       tick()
       requireTarget(targetId)
-      const busy = state.scans.find((s) => s.targetId === targetId && (s.status === 'queued' || s.status === 'running'))
-      if (busy) throw new ApiFailure(409, `${busy.id} is already ${busy.status} for this target. Wait for it to finish.`)
+      const busy = state.scans.find(
+        (s) => s.targetId === targetId && (s.status === 'queued' || s.status === 'running'),
+      )
+      if (busy)
+        throw new ApiFailure(
+          409,
+          `${busy.id} is already ${busy.status} for this target. Wait for it to finish.`,
+        )
       const record: ScanRecord = {
         id: `scan_${state.seq.scan++}`,
         targetId,
@@ -294,7 +307,8 @@ export function createDb(options: DbOptions = {}) {
       tick()
       const scan = state.scans.find((s) => s.id === scanId)
       if (!scan) throw new ApiFailure(404, `Scan ${scanId} does not exist.`)
-      if (scan.status !== 'completed') throw new ApiFailure(409, `${scanId} has not completed, so there is nothing to report yet.`)
+      if (scan.status !== 'completed')
+        throw new ApiFailure(409, `${scanId} has not completed, so there is nothing to report yet.`)
       const target = state.targets.find((t) => t.id === scan.targetId)
       const counts = findingsCount(scanId)
       const report: Report = {

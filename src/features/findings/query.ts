@@ -51,7 +51,13 @@ export const EMPTY_QUERY: FindingsQuery = {
 /** Filters only (no sort or paging). Used to decide whether "Clear filters" makes sense. */
 export function hasFilters(q: FindingsQuery): boolean {
   return Boolean(
-    q.text || q.severity.length || q.status.length || q.category.length || q.cwe.length || q.target.length || q.scan.length,
+    q.text ||
+    q.severity.length ||
+    q.status.length ||
+    q.category.length ||
+    q.cwe.length ||
+    q.target.length ||
+    q.scan.length,
   )
 }
 
@@ -229,7 +235,14 @@ export function parsePrompt(input: string, ctx: PromptContext = {}): PromptParse
   const q: FindingsQuery = { ...EMPTY_QUERY, sort: DEFAULT_SORT }
   const issues: PromptIssue[] = []
   const words: string[] = []
-  const lists = { severity: [] as Severity[], status: [] as FindingStatus[], category: [] as string[], cwe: [] as string[], target: [] as string[], scan: [] as string[] }
+  const lists = {
+    severity: [] as Severity[],
+    status: [] as FindingStatus[],
+    category: [] as string[],
+    cwe: [] as string[],
+    target: [] as string[],
+    scan: [] as string[],
+  }
 
   for (const token of tokenize(input)) {
     const sep = token.indexOf(':')
@@ -299,8 +312,19 @@ export function parsePrompt(input: string, ctx: PromptContext = {}): PromptParse
   return { query: { ...q, ...lists, text: words.join(' ').trim() }, issues }
 }
 
-const SEVERITY_SHORT: Record<Severity, string> = { critical: 'crit', high: 'high', medium: 'med', low: 'low', info: 'info' }
-const STATUS_SHORT: Record<FindingStatus, string> = { open: 'open', confirmed: 'confirmed', resolved: 'resolved', false_positive: 'fp' }
+const SEVERITY_SHORT: Record<Severity, string> = {
+  critical: 'crit',
+  high: 'high',
+  medium: 'med',
+  low: 'low',
+  info: 'info',
+}
+const STATUS_SHORT: Record<FindingStatus, string> = {
+  open: 'open',
+  confirmed: 'confirmed',
+  resolved: 'resolved',
+  false_positive: 'fp',
+}
 
 function quoteIfNeeded(value: string): string {
   return /\s/.test(value) ? `"${value}"` : value
@@ -309,8 +333,18 @@ function quoteIfNeeded(value: string): string {
 /** Writes a query as prompt text. parsePrompt(serializePrompt(q)) round-trips to the same query. */
 export function serializePrompt(q: FindingsQuery): string {
   const parts: string[] = []
-  if (q.severity.length) parts.push(`sev:${sortBy(q.severity, SEVERITIES).map((s) => SEVERITY_SHORT[s]).join(',')}`)
-  if (q.status.length) parts.push(`status:${sortBy(q.status, FINDING_STATUSES).map((s) => STATUS_SHORT[s]).join(',')}`)
+  if (q.severity.length)
+    parts.push(
+      `sev:${sortBy(q.severity, SEVERITIES)
+        .map((s) => SEVERITY_SHORT[s])
+        .join(',')}`,
+    )
+  if (q.status.length)
+    parts.push(
+      `status:${sortBy(q.status, FINDING_STATUSES)
+        .map((s) => STATUS_SHORT[s])
+        .join(',')}`,
+    )
   if (q.category.length) parts.push(`cat:${q.category.join(',')}`)
   if (q.cwe.length) parts.push(`cwe:${q.cwe.map((c) => c.replace('CWE-', '')).join(',')}`)
   for (const t of q.target) parts.push(`target:${quoteIfNeeded(t)}`)

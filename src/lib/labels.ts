@@ -28,7 +28,12 @@ export const STATUS_LABEL: Record<FindingStatus, string> = {
 }
 
 /** Workflow order for sorting by status: things needing action first. */
-export const STATUS_RANK: Record<FindingStatus, number> = { open: 0, confirmed: 1, resolved: 2, false_positive: 3 }
+export const STATUS_RANK: Record<FindingStatus, number> = {
+  open: 0,
+  confirmed: 1,
+  resolved: 2,
+  false_positive: 3,
+}
 
 export const SCAN_STATUS_LABEL: Record<ScanStatus, string> = {
   queued: 'QUEUED',
@@ -38,7 +43,11 @@ export const SCAN_STATUS_LABEL: Record<ScanStatus, string> = {
 }
 
 export const ENV_TAG: Record<Environment, string> = { production: 'PRD', staging: 'STG', dev: 'DEV' }
-export const ENV_LABEL: Record<Environment, string> = { production: 'Production', staging: 'Staging', dev: 'Development' }
+export const ENV_LABEL: Record<Environment, string> = {
+  production: 'Production',
+  staging: 'Staging',
+  dev: 'Development',
+}
 
 /** "A03: Injection" -> "A03" */
 export function categoryCode(category: OwaspCategory): string {
