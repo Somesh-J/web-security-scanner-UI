@@ -22,7 +22,7 @@ export function Toaster() {
         <div
           key={t.id}
           role={t.tone === 'error' ? 'alert' : 'status'}
-          className="pointer-events-auto flex animate-drawer items-start gap-3 rounded-sm border border-wire-2 bg-panel px-3.5 py-3 shadow-pop"
+          className="pointer-events-auto flex animate-drawer items-start gap-3 border border-wire-2 bg-void px-3.5 py-3 shadow-pop"
         >
           <span aria-hidden className={cn('font-mono text-[13px] font-semibold', TONE[t.tone].className)}>
             {TONE[t.tone].mark}

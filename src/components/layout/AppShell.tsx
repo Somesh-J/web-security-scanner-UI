@@ -5,10 +5,9 @@ import { queryKeys, useScans } from '@/api/queries'
 import { Prompt } from '@/features/prompt/Prompt'
 import { toast } from '@/stores/toast'
 import type { Scan } from '@/types/domain'
-import { ContextBar } from './ContextBar'
 import { NAV_ITEMS } from './nav'
-import { MobileNav, Rail } from './Rail'
 import { StatusBar } from './StatusBar'
+import { WindowBar } from './WindowBar'
 
 function isTypingTarget(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false
@@ -55,6 +54,14 @@ export function AppShell() {
         promptRef.current?.focus()
         return
       }
+      if (e.altKey && /^[1-6]$/.test(e.key)) {
+        const item = NAV_ITEMS[Number(e.key) - 1]
+        if (item) {
+          e.preventDefault()
+          navigate(item.to)
+        }
+        return
+      }
       if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return
       if (e.key === '/') {
         e.preventDefault()
@@ -86,22 +93,12 @@ export function AppShell() {
       >
         Skip to content
       </a>
-      <div className="flex min-h-0 flex-1">
-        <Rail />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <ContextBar onFocusPrompt={() => promptRef.current?.focus()} />
-          <main
-            id="main"
-            tabIndex={-1}
-            className="relative min-h-0 flex-1 overflow-y-auto focus:outline-none"
-          >
-            <Outlet />
-          </main>
-          <Prompt ref={promptRef} />
-        </div>
-      </div>
+      <WindowBar />
+      <main id="main" tabIndex={-1} className="relative min-h-0 flex-1 overflow-y-auto focus:outline-none">
+        <Outlet />
+      </main>
+      <Prompt ref={promptRef} />
       <StatusBar />
-      <MobileNav />
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/Button'
 import { Switch, TextField } from '@/components/ui/Field'
 import { IconCopy } from '@/components/ui/Icons'
-import { PageHeader, Panel, PanelHeader } from '@/components/ui/PageHeader'
+import { PageHeader, Panel } from '@/components/ui/PageHeader'
 import { cn } from '@/lib/cn'
 import { FAULT_KEY } from '@/lib/demo'
 import { profileSchema, type ProfileValues } from '@/lib/schemas'
@@ -104,9 +104,7 @@ function ThemePicker() {
             key={t.value}
             className={cn(
               'flex cursor-pointer items-center gap-2.5 rounded-xs border px-3 py-2 font-mono text-[12px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-live',
-              theme === t.value
-                ? 'border-signal bg-signal/10 text-bone'
-                : 'border-wire text-ash hover:border-wire-2 hover:text-bone',
+              theme === t.value ? 'border-bone bg-bone text-void' : 'border-wire-2 text-ash hover:text-bone',
             )}
           >
             <input
@@ -118,16 +116,10 @@ function ThemePicker() {
               aria-label={`${t.label} theme, ${t.hint}`}
               className="sr-only"
             />
-            <span
-              aria-hidden
-              className={cn(
-                'size-3 rounded-full border',
-                theme === t.value ? 'border-signal bg-signal' : 'border-smoke',
-              )}
-            />
+            <span aria-hidden>{theme === t.value ? '(•)' : '( )'}</span>
             <span>
               <span className="block font-semibold tracking-wider uppercase">{t.label}</span>
-              <span className="text-[11px] text-smoke">{t.hint}</span>
+              <span className="text-[11px] opacity-70">{t.hint}</span>
             </span>
           </label>
         ))}
@@ -254,19 +246,17 @@ export function SettingsPage() {
     <div className="flex flex-col gap-5 px-4 py-6 md:px-6">
       <PageHeader title="Settings" meta="saved in this browser" />
 
-      <Panel label="Profile">
-        <PanelHeader title="Operator profile" />
+      <Panel label="operator profile">
         <Row title="Profile" description="Shown in the status bar and on reports.">
           <ProfileForm />
         </Row>
       </Panel>
 
-      <Panel label="Appearance">
-        <PanelHeader title="Appearance" />
+      <Panel label="appearance">
         <Row title="Theme" description="Saved across reloads and applied before the page draws.">
           <ThemePicker />
         </Row>
-        <div className="border-t border-wire" />
+        <div className="border-t border-dashed border-wire" />
         <Row
           title="CRT mode"
           description="Scanlines and phosphor glow. Purely cosmetic, and off when reduced motion is on."
@@ -277,15 +267,13 @@ export function SettingsPage() {
         </Row>
       </Panel>
 
-      <Panel label="API access">
-        <PanelHeader title="API access" />
+      <Panel label="api access">
         <Row title="API key" description="For CI pipelines and scripts.">
           <ApiKeyField />
         </Row>
       </Panel>
 
-      <Panel label="Demo controls">
-        <PanelHeader title="Demo controls" />
+      <Panel label="demo controls">
         <Row
           title="Mock API"
           description="This build runs against a mock backend in your browser (Mock Service Worker)."

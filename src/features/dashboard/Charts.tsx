@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { SEV_FILL } from '@/components/ui/severityStyles'
+import { SEV_TEXT } from '@/components/ui/severityStyles'
 import { cn } from '@/lib/cn'
 import { SEVERITY_LABEL, SEVERITY_TAG } from '@/lib/labels'
 import { SEVERITIES, type Severity } from '@/types/domain'
 import { STACK_ORDER, type DayBucket, type SeverityCounts } from './stats'
 
 /**
- * Hand-rolled SVG charts. They read colours from the same CSS variables as the rest of the UI,
- * so they theme automatically, and every mark has a text equivalent (legend, labels, data table).
+ * btop-style charts. Bars are drawn as segmented blocks, like terminal block characters.
+ * Colours come from the same CSS variables as the rest of the UI, so both themes work,
+ * and every mark has a text equivalent (row labels and counts, or the hidden data table).
  */
 
 const SEV_VAR: Record<Severity, string> = {
@@ -19,69 +20,61 @@ const SEV_VAR: Record<Severity, string> = {
   info: 'var(--sev-info)',
 }
 
-/** Horizontal stacked bar of open findings by severity. Each segment links to that filtered view. */
+/** 7px block, 2px gap: reads as a row of ▮ characters. */
+const blocks = (color: string) => `repeating-linear-gradient(90deg, ${color} 0 7px, transparent 7px 9px)`
+
+/** One segmented meter per severity. Each row opens that filtered findings view. */
 export function SeverityBreakdown({ counts }: { counts: SeverityCounts }) {
   const navigate = useNavigate()
+  const max = Math.max(1, ...SEVERITIES.map((s) => counts[s]))
   const total = SEVERITIES.reduce((n, s) => n + counts[s], 0)
-  const present = SEVERITIES.filter((s) => counts[s] > 0)
 
   if (total === 0)
     return <p className="py-6 font-mono text-[12.5px] text-ash">$ 0 open findings. Nothing needs action.</p>
 
   return (
-    <div>
-      <ul className="flex h-9 w-full gap-[2px]" aria-label="Open findings by severity">
-        {present.map((s) => (
-          <li key={s} className="flex min-w-2" style={{ flexGrow: counts[s] }}>
-            <button
-              type="button"
-              onClick={() => navigate(`/findings?sev=${s}&status=open,confirmed`)}
-              style={{ background: SEV_VAR[s] }}
-              className="h-full w-full rounded-[3px] transition-[filter] hover:brightness-125"
-              aria-label={`${SEVERITY_LABEL[s]}: ${counts[s]} open. Show these findings.`}
-              title={`${SEVERITY_LABEL[s]}: ${counts[s]}`}
-            />
-          </li>
-        ))}
-      </ul>
-      <ul className="mt-4 grid grid-cols-5 gap-2">
-        {SEVERITIES.map((s) => (
-          <li key={s}>
-            <button
-              type="button"
-              onClick={() => navigate(`/findings?sev=${s}&status=open,confirmed`)}
-              className="group w-full rounded-xs text-left"
-            >
-              <span className="flex items-center gap-1.5 font-mono text-[11px] text-ash group-hover:text-bone">
-                <span aria-hidden className={cn('size-2 rounded-[2px]', SEV_FILL[s])} />
-                {SEVERITY_TAG[s]}
-              </span>
-              <span className="tabular mt-1 block font-mono text-[20px] font-medium text-bone">
-                {counts[s]}
-              </span>
-              <span className="sr-only">{SEVERITY_LABEL[s]} open findings. Show these findings.</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="flex flex-col gap-1" aria-label="Open findings by severity">
+      {SEVERITIES.map((s) => (
+        <li key={s}>
+          <button
+            type="button"
+            onClick={() => navigate(`/findings?sev=${s}&status=open,confirmed`)}
+            className="group grid w-full grid-cols-[44px_minmax(0,1fr)_32px] items-center gap-3 px-1 py-1.5 text-left font-mono text-[12px] hover:bg-panel-2"
+            aria-label={`${SEVERITY_LABEL[s]}: ${counts[s]} open. Show these findings.`}
+          >
+            <span className={cn('font-semibold', SEV_TEXT[s])}>{SEVERITY_TAG[s]}</span>
+            <span className="relative h-3.5" style={{ background: blocks('var(--wire)') }}>
+              <span
+                className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                style={{ width: `${(counts[s] / max) * 100}%`, background: blocks(SEV_VAR[s]) }}
+              />
+            </span>
+            <span className="tabular text-right text-bone">{counts[s]}</span>
+          </button>
+        </li>
+      ))}
+    </ul>
   )
 }
 
-/** Stacked columns of new findings per day by severity, with a hover tooltip and an accessible table. */
+/**
+ * New findings per day, stacked by severity. Each finding is one block cell, so the chart reads
+ * like a terminal histogram. Hover a column for the breakdown; a data table is provided for screen readers.
+ */
 export function SeverityTrend({ days }: { days: DayBucket[] }) {
   const [hover, setHover] = useState<number | null>(null)
   const W = 640
-  const H = 180
-  const pad = { top: 10, right: 8, bottom: 22, left: 26 }
+  const H = 190
+  const pad = { top: 8, right: 4, bottom: 22, left: 24 }
   const innerW = W - pad.left - pad.right
   const innerH = H - pad.top - pad.bottom
   const max = Math.max(4, ...days.map((d) => d.total))
   const niceMax = Math.ceil(max / 4) * 4
-  const ticks = [0, niceMax / 4, niceMax / 2, (niceMax * 3) / 4, niceMax]
+  const ticks = [0, niceMax / 2, niceMax]
   const slot = innerW / days.length
-  const barW = Math.max(3, slot - 4)
-  const y = (v: number) => pad.top + innerH - (v / niceMax) * innerH
+  const barW = Math.max(4, slot - 6)
+  const cell = innerH / niceMax
+  const y = (v: number) => pad.top + innerH - v * cell
   const active = hover !== null ? days[hover] : undefined
   const totalAll = days.reduce((n, d) => n + d.total, 0)
 
@@ -103,7 +96,7 @@ export function SeverityTrend({ days }: { days: DayBucket[] }) {
               y2={y(t)}
               stroke="var(--wire)"
               strokeWidth={1}
-              strokeDasharray={t === 0 ? undefined : '2 4'}
+              strokeDasharray={t === 0 ? undefined : '1 5'}
             />
             <text
               x={pad.left - 8}
@@ -116,29 +109,23 @@ export function SeverityTrend({ days }: { days: DayBucket[] }) {
           </g>
         ))}
         {days.map((d, i) => {
-          let acc = 0
           const x = pad.left + i * slot + (slot - barW) / 2
+          const cells: { key: string; s: Severity; n: number }[] = []
+          let n = 0
+          for (const s of STACK_ORDER)
+            for (let k = 0; k < d.counts[s]; k++) cells.push({ key: `${s}${k}`, s, n: n++ })
           return (
-            <g key={d.date} opacity={hover === null || hover === i ? 1 : 0.45}>
-              {[...STACK_ORDER].map((s) => {
-                const v = d.counts[s]
-                if (!v) return null
-                const y0 = y(acc)
-                acc += v
-                const y1 = y(acc)
-                // 1px surface gap between stacked segments keeps adjacent colours separable.
-                return (
-                  <rect
-                    key={s}
-                    x={x}
-                    y={y1}
-                    width={barW}
-                    height={Math.max(1, y0 - y1 - 1)}
-                    rx={1.5}
-                    fill={SEV_VAR[s]}
-                  />
-                )
-              })}
+            <g key={d.date} opacity={hover === null || hover === i ? 1 : 0.35}>
+              {cells.map((c) => (
+                <rect
+                  key={c.key}
+                  x={x}
+                  y={y(c.n + 1) + 1}
+                  width={barW}
+                  height={Math.max(1, cell - 2)}
+                  fill={SEV_VAR[c.s]}
+                />
+              ))}
               <rect
                 x={pad.left + i * slot}
                 y={pad.top}
@@ -167,16 +154,15 @@ export function SeverityTrend({ days }: { days: DayBucket[] }) {
 
       {active && hover !== null && (
         <div
-          className="pointer-events-none absolute top-0 z-10 min-w-36 -translate-x-1/2 rounded-xs border border-wire-2 bg-panel px-2.5 py-2 font-mono text-[11.5px] shadow-pop"
+          className="pointer-events-none absolute top-0 z-10 min-w-36 -translate-x-1/2 border border-wire-2 bg-void px-2.5 py-2 font-mono text-[11.5px] shadow-pop"
           style={{ left: `${((pad.left + hover * slot + slot / 2) / W) * 100}%` }}
         >
           <p className="text-bone">
             {active.date} · {active.total} new
           </p>
           {SEVERITIES.filter((s) => active.counts[s]).map((s) => (
-            <p key={s} className="flex items-center gap-1.5 text-ash">
-              <span aria-hidden className={cn('size-1.5 rounded-[1px]', SEV_FILL[s])} />
-              {SEVERITY_TAG[s]} {active.counts[s]}
+            <p key={s} className="whitespace-pre text-ash">
+              <span className={SEV_TEXT[s]}>{SEVERITY_TAG[s].padEnd(4, ' ')}</span> {active.counts[s]}
             </p>
           ))}
         </div>
@@ -185,8 +171,10 @@ export function SeverityTrend({ days }: { days: DayBucket[] }) {
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-ash" aria-label="Legend">
         {SEVERITIES.map((s) => (
           <li key={s} className="flex items-center gap-1.5">
-            <span aria-hidden className={cn('size-2 rounded-[2px]', SEV_FILL[s])} />
-            {SEVERITY_LABEL[s]}
+            <span aria-hidden className={SEV_TEXT[s]}>
+              ■
+            </span>
+            {SEVERITY_LABEL[s].toLowerCase()}
           </li>
         ))}
       </ul>

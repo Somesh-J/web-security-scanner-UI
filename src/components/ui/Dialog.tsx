@@ -21,7 +21,9 @@ export function DialogBody({ children }: { children: ReactNode }) {
 
 export function DialogFooter({ children }: { children: ReactNode }) {
   return (
-    <footer className="flex flex-wrap justify-end gap-2 border-t border-wire px-5 py-3">{children}</footer>
+    <footer className="flex flex-wrap justify-end gap-2 border-t border-dashed border-wire-2 px-5 py-3">
+      {children}
+    </footer>
   )
 }
 
@@ -44,14 +46,14 @@ export function Dialog({
         <RadixDialog.Overlay className="fixed inset-0 z-40 animate-fade bg-void/75 backdrop-blur-[2px]" />
         <RadixDialog.Content
           className={cn(
-            'fixed top-1/2 left-1/2 z-50 flex max-h-[min(90dvh,760px)] w-[min(560px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 animate-fade flex-col rounded-sm border border-wire-2 bg-panel shadow-pop focus:outline-none',
+            'fixed top-1/2 left-1/2 z-50 flex max-h-[min(90dvh,760px)] w-[min(560px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 animate-fade flex-col border-[3px] border-double border-wire-2 bg-void shadow-pop focus:outline-none',
             className,
           )}
         >
-          <header className="flex items-start justify-between gap-4 border-b border-wire px-5 pt-4 pb-3">
+          <header className="flex items-start justify-between gap-4 border-b border-dashed border-wire-2 px-5 pt-4 pb-3">
             <div className="min-w-0">
               {eyebrow && <p className="font-mono text-[11px] text-smoke">~/{eyebrow}</p>}
-              <RadixDialog.Title className="mt-1 font-display text-[15px] font-semibold tracking-wide text-bone uppercase">
+              <RadixDialog.Title className="mt-1 font-display text-[28px] leading-none tracking-wide text-bone uppercase">
                 {title}
               </RadixDialog.Title>
               {description ? (

@@ -72,7 +72,7 @@ export const FindingsTable = memo(function FindingsTable({
           Enter to open.
         </caption>
         <thead>
-          <tr className="border-b border-wire">
+          <tr className="border-b border-wire-2">
             <th scope="col" className="w-10 px-3 py-2.5">
               <input
                 type="checkbox"
@@ -125,7 +125,7 @@ export const FindingsTable = memo(function FindingsTable({
                 onMouseEnter={() => onActivate(f.id)}
                 aria-selected={isSelected}
                 className={cn(
-                  'group cursor-pointer border-b border-wire transition-colors hover:bg-panel-2',
+                  'group cursor-pointer border-b border-dashed border-wire transition-colors hover:bg-panel-2',
                   isSelected && 'bg-signal/[0.06]',
                   isActive && 'bg-panel-2 shadow-[inset_2px_0_0_var(--live)]',
                 )}

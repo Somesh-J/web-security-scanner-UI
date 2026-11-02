@@ -153,7 +153,7 @@ export function ReportsPage() {
         <table className="w-full min-w-[820px] border-collapse text-left">
           <caption className="sr-only">Generated reports</caption>
           <thead>
-            <tr className="border-b border-wire">
+            <tr className="border-b border-wire-2">
               {['Report', 'Target', 'Scan', 'Findings', 'Created (UTC)', ''].map((h, i) => (
                 <th key={h || i} scope="col" className="label px-4 py-2.5">
                   {h || <span className="sr-only">Download</span>}
@@ -165,7 +165,7 @@ export function ReportsPage() {
             {reports.data.map((r) => {
               const scan = scanById.get(r.scanId)
               return (
-                <tr key={r.id} className="border-b border-wire hover:bg-panel-2">
+                <tr key={r.id} className="border-b border-dashed border-wire hover:bg-panel-2">
                   <td className="px-4 py-3 font-mono text-[12.5px] text-bone">
                     {r.id}
                     <span className="ml-2 rounded-xs border border-wire-2 px-1 text-[10px] text-ash uppercase">
@@ -226,7 +226,7 @@ export function ReportsPage() {
           </Button>
         }
       />
-      <Panel label="Reports">{body}</Panel>
+      <Panel label="reports">{body}</Panel>
       <p className="font-mono text-[11.5px] text-smoke">
         The reports endpoint is set to fail on its first request after every page load, to show error
         handling. Retry recovers it.

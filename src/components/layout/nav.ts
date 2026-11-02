@@ -1,27 +1,17 @@
-import type { ComponentType, SVGProps } from 'react'
-import {
-  IconDashboard,
-  IconFindings,
-  IconReport,
-  IconScan,
-  IconSettings,
-  IconTarget,
-} from '@/components/ui/Icons'
-
 export interface NavItem {
   to: string
+  /** tmux-style window name. */
   label: string
-  /** Single-key shortcut shown in the rail tooltip: g then this key. */
+  /** Second key of the `g` chord (g d, g t ...). */
   key: string
-  icon: ComponentType<SVGProps<SVGSVGElement>>
 }
 
-/** Order follows the analyst workflow: overview, add target, scan, triage findings, report. */
+/** Window order follows the analyst workflow: overview, add target, scan, triage, report, configure. */
 export const NAV_ITEMS: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', key: 'd', icon: IconDashboard },
-  { to: '/targets', label: 'Targets', key: 't', icon: IconTarget },
-  { to: '/scans', label: 'Scans', key: 's', icon: IconScan },
-  { to: '/findings', label: 'Findings', key: 'f', icon: IconFindings },
-  { to: '/reports', label: 'Reports', key: 'r', icon: IconReport },
-  { to: '/settings', label: 'Settings', key: 'c', icon: IconSettings },
+  { to: '/dashboard', label: 'dashboard', key: 'd' },
+  { to: '/targets', label: 'targets', key: 't' },
+  { to: '/scans', label: 'scans', key: 's' },
+  { to: '/findings', label: 'findings', key: 'f' },
+  { to: '/reports', label: 'reports', key: 'r' },
+  { to: '/settings', label: 'settings', key: 'c' },
 ]

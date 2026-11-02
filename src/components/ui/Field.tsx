@@ -38,7 +38,7 @@ function FieldShell({ id, label, hint, error, children, className }: FieldShellP
 }
 
 const controlClass =
-  'h-10 w-full min-w-0 rounded-xs border bg-panel-2 px-3 font-mono text-[13px] text-bone placeholder:text-smoke transition-colors focus:border-live focus:outline-none focus-visible:outline-none disabled:opacity-60'
+  'h-10 w-full min-w-0 border bg-void px-3 font-mono text-[13px] text-bone placeholder:text-smoke transition-colors focus:border-live focus:outline-none focus-visible:outline-none disabled:opacity-60'
 
 function describedBy(id: string, error?: string, hint?: ReactNode) {
   if (error) return `${id}-error`
@@ -70,7 +70,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
           aria-describedby={describedBy(id, error, hint)}
           className={cn(
             controlClass,
-            error ? 'border-signal' : 'border-wire',
+            error ? 'border-signal' : 'border-wire-2',
             trailing ? 'pr-10' : '',
             className,
           )}
@@ -106,7 +106,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(funct
         className={cn(
           controlClass,
           'cursor-pointer appearance-none bg-no-repeat pr-8',
-          error ? 'border-signal' : 'border-wire',
+          error ? 'border-signal' : 'border-wire-2',
           className,
         )}
         style={{
@@ -159,9 +159,10 @@ export function Switch({ id: idProp, label, description, checked, onCheckedChang
         onCheckedChange={onCheckedChange}
         disabled={disabled}
         aria-describedby={description ? `${id}-desc` : undefined}
-        className="relative mt-0.5 h-5 w-9 shrink-0 cursor-pointer rounded-full border border-wire-2 bg-panel-2 transition-colors data-[state=checked]:border-signal data-[state=checked]:bg-signal disabled:opacity-50"
+        className="group shrink-0 cursor-pointer px-1 font-mono text-[12px] font-semibold whitespace-pre text-ash hover:bg-panel-2 disabled:opacity-50 data-[state=checked]:bg-bone data-[state=checked]:text-void"
       >
-        <RadixSwitch.Thumb className="block size-3.5 translate-x-0.5 rounded-full bg-ash transition-transform data-[state=checked]:translate-x-[18px] data-[state=checked]:bg-signal-ink" />
+        {/* Terminal toggle: [ on] / [off]. Radix still provides role="switch" and aria-checked. */}
+        <span aria-hidden>{checked ? '[ on]' : '[off]'}</span>
       </RadixSwitch.Root>
     </div>
   )

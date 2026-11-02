@@ -22,11 +22,15 @@ export function ProgressRail({ progress, label, live = true, className }: Progre
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={value}
-        className="relative h-1 min-w-16 flex-1 overflow-hidden rounded-full bg-wire"
+        className="relative h-2.5 min-w-16 flex-1 overflow-hidden"
+        style={{ background: 'repeating-linear-gradient(90deg, var(--wire) 0 5px, transparent 5px 7px)' }}
       >
         <div
-          className="relative h-full overflow-hidden rounded-full bg-live transition-[width] duration-[1800ms] ease-linear"
-          style={{ width: `${value}%` }}
+          className="relative h-full overflow-hidden transition-[width] duration-[1800ms] ease-linear"
+          style={{
+            width: `${value}%`,
+            background: 'repeating-linear-gradient(90deg, var(--live) 0 5px, transparent 5px 7px)',
+          }}
         >
           {live && (
             <span

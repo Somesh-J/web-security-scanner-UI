@@ -6,6 +6,7 @@ import { ApiError, errorMessage } from '@/api/client'
 import { useLogin } from '@/api/queries'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
+import { Panel } from '@/components/ui/PageHeader'
 import { LogoMark } from '@/components/layout/Logo'
 import { loginSchema, type LoginValues } from '@/lib/schemas'
 import { DEMO_ACCOUNT } from '@/lib/demo'
@@ -82,7 +83,7 @@ export function LoginPage() {
       {/* Left: the one ambient moment in the product. */}
       <section
         aria-label="System status"
-        className="relative hidden overflow-hidden border-r border-wire bg-panel md:flex md:flex-col md:justify-between md:p-10"
+        className="relative hidden overflow-hidden border-r border-wire-2 bg-void md:flex md:flex-col md:justify-between md:p-10"
       >
         <div
           aria-hidden
@@ -95,7 +96,7 @@ export function LoginPage() {
         />
         <div className="relative flex items-center gap-3 text-bone">
           <LogoMark />
-          <span className="font-display text-[15px] font-bold tracking-[0.16em]">REDCELL</span>
+          <span className="font-display text-[26px] leading-none tracking-[0.1em]">REDCELL</span>
         </div>
         <pre className="relative font-mono text-[13px] leading-7 text-ash" aria-hidden>
           {lines.map((line, i) => (
@@ -110,7 +111,7 @@ export function LoginPage() {
           ))}
         </pre>
         <div className="relative">
-          <p className="font-display text-[20px] font-semibold tracking-wide text-bone uppercase">
+          <p className="font-display text-[34px] leading-none tracking-wide text-bone uppercase">
             Authorised targets only.
           </p>
           <p className="mt-2 max-w-sm text-[13px] text-ash">
@@ -124,47 +125,53 @@ export function LoginPage() {
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 text-bone md:hidden">
             <LogoMark />
-            <span className="font-display text-[15px] font-bold tracking-[0.16em]">REDCELL</span>
+            <span className="font-display text-[26px] leading-none tracking-[0.1em]">REDCELL</span>
           </div>
           <p className="font-mono text-[11px] text-smoke">~/login</p>
-          <h1 className="mt-1 font-display text-[24px] font-semibold tracking-wide text-bone uppercase">
+          <h1 className="mt-1 font-display text-[48px] leading-none tracking-wide text-bone uppercase">
             Access gate
           </h1>
           <p className="mt-2 text-[13px] text-ash">Sign in to run scans and triage findings.</p>
 
-          <form noValidate onSubmit={(e) => void onSubmit(e)} className="mt-8 flex flex-col gap-5">
-            <TextField
-              label="Operator email"
-              type="email"
-              autoComplete="username"
-              placeholder="you@company.com"
-              error={errors.email?.message}
-              {...register('email')}
-            />
-            <TextField
-              label="Passphrase"
-              type="password"
-              autoComplete="current-password"
-              placeholder="••••••••"
-              error={errors.password?.message}
-              {...register('password')}
-            />
+          <Panel label="auth" className="mt-8">
+            <form
+              noValidate
+              onSubmit={(e) => void onSubmit(e)}
+              className="flex flex-col gap-5 px-4 pt-5 pb-4"
+            >
+              <TextField
+                label="Operator email"
+                type="email"
+                autoComplete="username"
+                placeholder="you@company.com"
+                error={errors.email?.message}
+                {...register('email')}
+              />
+              <TextField
+                label="Passphrase"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                error={errors.password?.message}
+                {...register('password')}
+              />
 
-            {authError && (
-              <p
-                role="alert"
-                className="rounded-xs border border-signal/50 bg-signal/10 px-3 py-2 font-mono text-[12.5px] text-signal"
-              >
-                ACCESS DENIED. {authError.replace(/^Access denied\.\s*/, '')}
-              </p>
-            )}
+              {authError && (
+                <p
+                  role="alert"
+                  className="rounded-xs border border-signal/50 bg-signal/10 px-3 py-2 font-mono text-[12.5px] text-signal"
+                >
+                  ACCESS DENIED. {authError.replace(/^Access denied\.\s*/, '')}
+                </p>
+              )}
 
-            <Button type="submit" variant="primary" loading={login.isPending} className="h-10 w-full">
-              {login.isPending ? 'Authenticating' : 'Authenticate'}
-            </Button>
-          </form>
+              <Button type="submit" variant="primary" loading={login.isPending} className="h-10 w-full">
+                {login.isPending ? 'Authenticating' : 'Authenticate'}
+              </Button>
+            </form>
+          </Panel>
 
-          <div className="mt-8 rounded-xs border border-dashed border-wire-2 px-3 py-3">
+          <div className="mt-6 border border-dashed border-wire-2 px-3 py-3">
             <p className="label">Demo account</p>
             <p className="mt-1.5 font-mono text-[12.5px] text-bone">
               {DEMO_ACCOUNT.email} <span className="text-smoke">/</span> {DEMO_ACCOUNT.password}

@@ -1,8 +1,8 @@
 import * as Menu from '@radix-ui/react-dropdown-menu'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
-import { IconChevron, IconDownload } from '@/components/ui/Icons'
-import { SEV_FILL } from '@/components/ui/severityStyles'
+import { IconDownload } from '@/components/ui/Icons'
+import { SEV_TEXT } from '@/components/ui/severityStyles'
 import { cn } from '@/lib/cn'
 import { focusOnMount } from '@/lib/focus'
 import { categoryName, SEVERITY_TAG, STATUS_LABEL } from '@/lib/labels'
@@ -49,13 +49,14 @@ function Chip({
       aria-label={`${label}, ${count} findings`}
       onClick={onClick}
       className={cn(
-        'inline-flex h-7 items-center gap-1.5 rounded-xs border px-2 font-mono text-[11.5px] transition-colors',
-        pressed
-          ? 'border-bone bg-panel-2 text-bone'
-          : 'border-wire text-ash hover:border-wire-2 hover:text-bone',
-        count === 0 && !pressed && 'opacity-50',
+        'inline-flex h-7 items-center gap-1.5 px-1.5 font-mono text-[12px] transition-colors hover:bg-panel-2',
+        pressed ? 'text-bone' : 'text-ash hover:text-bone',
+        count === 0 && !pressed && 'opacity-45',
       )}
     >
+      <span aria-hidden className={pressed ? 'text-live' : 'text-smoke'}>
+        {pressed ? '[x]' : '[ ]'}
+      </span>
       {children}
       <span className="tabular text-smoke">{count}</span>
     </button>
@@ -105,30 +106,26 @@ function SearchBox({ value, onChange }: { value: string; onChange: (text: string
 }
 
 const menuItem =
-  'flex cursor-pointer items-center gap-2 rounded-xs px-2 py-1.5 font-mono text-[12px] text-bone outline-none data-[highlighted]:bg-panel-2'
+  'flex cursor-pointer items-center gap-2 rounded-xs px-2 py-1.5 font-mono text-[12px] text-bone outline-none data-[highlighted]:bg-bone data-[highlighted]:text-void'
 
 function MultiMenu({ label, selected, children }: { label: string; selected: number; children: ReactNode }) {
   return (
     <Menu.Root modal={false}>
       <Menu.Trigger
         className={cn(
-          'inline-flex h-7 items-center gap-1.5 rounded-xs border px-2 font-mono text-[11.5px]',
-          selected ? 'border-bone text-bone' : 'border-wire text-ash hover:border-wire-2 hover:text-bone',
+          'inline-flex h-7 items-center gap-1 px-1.5 font-mono text-[12px] hover:bg-panel-2 data-[state=open]:bg-bone data-[state=open]:text-void',
+          selected ? 'text-bone' : 'text-ash hover:text-bone',
         )}
       >
         {label}
-        {selected > 0 && (
-          <span className="rounded-xs bg-signal px-1 text-[10px] font-semibold text-signal-ink">
-            {selected}
-          </span>
-        )}
-        <IconChevron className="rotate-90" />
+        {selected > 0 && <span className="text-signal">({selected})</span>}
+        <span aria-hidden>▾</span>
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Content
           align="start"
           sideOffset={4}
-          className="z-50 max-h-[60dvh] min-w-64 animate-fade overflow-y-auto rounded-sm border border-wire-2 bg-panel p-1 shadow-pop"
+          className="z-50 max-h-[60dvh] min-w-64 animate-fade overflow-y-auto border border-wire-2 bg-void p-1 shadow-pop"
         >
           {children}
         </Menu.Content>
@@ -155,7 +152,7 @@ export function FilterBar({
   const currentPrompt = serializePrompt({ ...query, page: 1 })
 
   return (
-    <div className="flex flex-col gap-3 border-b border-wire px-4 py-3">
+    <div className="flex flex-col gap-3 border-b border-dashed border-wire-2 px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <SearchBox value={query.text} onChange={(text) => onChange({ text }, { replace: true })} />
 
@@ -168,8 +165,7 @@ export function FilterBar({
               count={counts.severity[s]}
               onClick={() => onChange({ severity: toggle(query.severity, s) })}
             >
-              <span aria-hidden className={cn('size-1.5 rounded-full', SEV_FILL[s])} />
-              {SEVERITY_TAG[s]}
+              <span className={SEV_TEXT[s]}>{SEVERITY_TAG[s]}</span>
             </Chip>
           ))}
         </div>
@@ -183,8 +179,8 @@ export function FilterBar({
               onSelect={(e) => e.preventDefault()}
               className={menuItem}
             >
-              <span aria-hidden className="w-3 text-live">
-                {query.status.includes(s) ? '✓' : ''}
+              <span aria-hidden className={query.status.includes(s) ? 'text-live' : 'text-smoke'}>
+                {query.status.includes(s) ? '[x]' : '[ ]'}
               </span>
               <span className="flex-1">{STATUS_LABEL[s]}</span>
               <span className="tabular text-smoke">{counts.status[s]}</span>
@@ -203,8 +199,8 @@ export function FilterBar({
                 onSelect={(e) => e.preventDefault()}
                 className={menuItem}
               >
-                <span aria-hidden className="w-3 text-live">
-                  {query.category.includes(code) ? '✓' : ''}
+                <span aria-hidden className={query.category.includes(code) ? 'text-live' : 'text-smoke'}>
+                  {query.category.includes(code) ? '[x]' : '[ ]'}
                 </span>
                 <span className="text-ash">{code}</span>
                 <span className="flex-1 truncate">{categoryName(c)}</span>
@@ -223,8 +219,8 @@ export function FilterBar({
               onSelect={(e) => e.preventDefault()}
               className={menuItem}
             >
-              <span aria-hidden className="w-3 text-live">
-                {query.target.includes(t.id) ? '✓' : ''}
+              <span aria-hidden className={query.target.includes(t.id) ? 'text-live' : 'text-smoke'}>
+                {query.target.includes(t.id) ? '[x]' : '[ ]'}
               </span>
               <span className="flex-1 truncate">{t.name}</span>
               <span className="text-smoke">{t.id}</span>
@@ -234,15 +230,15 @@ export function FilterBar({
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Menu.Root>
-            <Menu.Trigger className="inline-flex h-7 items-center gap-1.5 rounded-xs border border-wire px-2 font-mono text-[11.5px] text-ash hover:border-wire-2 hover:text-bone">
+            <Menu.Trigger className="inline-flex h-7 items-center gap-1 px-1.5 font-mono text-[12px] text-ash hover:bg-panel-2 hover:text-bone data-[state=open]:bg-bone data-[state=open]:text-void">
               Saved views
-              <IconChevron className="rotate-90" />
+              <span aria-hidden>▾</span>
             </Menu.Trigger>
             <Menu.Portal>
               <Menu.Content
                 align="end"
                 sideOffset={4}
-                className="z-50 w-72 animate-fade rounded-sm border border-wire-2 bg-panel p-1 shadow-pop"
+                className="z-50 w-72 animate-fade border border-wire-2 bg-void p-1 shadow-pop"
               >
                 {views.map((v) => (
                   <div key={v.id} className="group flex items-center">
@@ -258,7 +254,7 @@ export function FilterBar({
                       <span className="text-[11px] text-smoke">{v.query}</span>
                     </Menu.Item>
                     <Menu.Item
-                      className="cursor-pointer rounded-xs px-2 py-1 font-mono text-[11px] text-smoke outline-none data-[highlighted]:bg-panel-2 data-[highlighted]:text-signal"
+                      className="cursor-pointer rounded-xs px-2 py-1 font-mono text-[11px] text-smoke outline-none data-[highlighted]:bg-bone data-[highlighted]:text-void data-[highlighted]:text-signal"
                       onSelect={() => deleteView(v.id)}
                       aria-label={`Delete saved view ${v.name}`}
                     >

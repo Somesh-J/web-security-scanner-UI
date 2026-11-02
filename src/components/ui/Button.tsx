@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { Link, type LinkProps } from 'react-router-dom'
 import { cn } from '@/lib/cn'
-import { buttonClass, type Size, type Variant } from './buttonStyles'
+import { BRACKET, buttonClass, type Size, type Variant } from './buttonStyles'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
@@ -33,8 +33,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={buttonClass(variant, size, className)}
       {...rest}
     >
+      <span aria-hidden className={BRACKET}>
+        [
+      </span>
       {loading ? <Spinner /> : icon}
       {children}
+      <span aria-hidden className={BRACKET}>
+        ]
+      </span>
     </button>
   )
 })
@@ -50,20 +56,19 @@ export function ButtonLink({
 }: LinkProps & { variant?: Variant; size?: Size; icon?: ReactNode }) {
   return (
     <Link className={buttonClass(variant, size, className)} {...rest}>
+      <span aria-hidden className={BRACKET}>
+        [
+      </span>
       {icon}
       {children}
+      <span aria-hidden className={BRACKET}>
+        ]
+      </span>
     </Link>
   )
 }
 
+/** Classic terminal spinner: | / - \ cycling via CSS steps. */
 export function Spinner({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'inline-block size-3 animate-spin rounded-full border-[1.5px] border-current border-r-transparent',
-        className,
-      )}
-    />
-  )
+  return <span aria-hidden data-spinner className={cn('inline-block w-[1ch] text-center', className)} />
 }

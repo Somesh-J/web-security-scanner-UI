@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useFindings, useScans, useTargets } from '@/api/queries'
 import { ButtonLink } from '@/components/ui/Button'
-import { IconChevron, IconPlay } from '@/components/ui/Icons'
-import { PageHeader, Panel, PanelHeader } from '@/components/ui/PageHeader'
+import { IconPlay } from '@/components/ui/Icons'
+import { PageHeader, Panel } from '@/components/ui/PageHeader'
 import { ProgressRail } from '@/components/ui/ProgressRail'
 import { EmptyState, ErrorState, Skeleton, SkeletonRows } from '@/components/ui/States'
 import { SeverityStrip } from '@/components/ui/Tags'
@@ -53,18 +53,20 @@ function Readout({
   return (
     <Link
       to={to}
-      className="group flex min-w-0 flex-col gap-3 bg-panel px-4 py-4 transition-colors hover:bg-panel-2 focus-visible:relative focus-visible:z-10"
+      className="group flex min-w-0 flex-col gap-1 px-4 py-3 transition-colors hover:bg-panel-2 focus-visible:relative focus-visible:z-10"
     >
       <span className="label flex items-center justify-between group-hover:text-bone">
         {label}
-        <IconChevron className="opacity-0 transition-opacity group-hover:opacity-100" />
+        <span aria-hidden className="text-smoke group-hover:text-bone">
+          ↵
+        </span>
       </span>
       {loading ? (
-        <Skeleton className="h-8 w-16" />
+        <Skeleton className="my-1 h-11 w-16" />
       ) : (
         <span
           className={cn(
-            'tabular font-mono text-[34px] leading-none font-medium',
+            'font-display text-[58px] leading-[0.95]',
             tone === 'signal' ? 'text-signal' : 'text-bone',
           )}
         >
@@ -119,54 +121,49 @@ export function DashboardPage() {
         </Panel>
       )}
 
-      <section
-        aria-label="Key numbers"
-        className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-wire bg-wire lg:grid-cols-4"
-      >
-        <Readout
-          label="Targets"
-          value={targets.data?.length}
-          loading={targets.isPending}
-          to="/targets"
-          detail={`${prodTargets} in production`}
-        />
-        <Readout
-          label="Scans run"
-          value={scans.data?.filter((s) => s.status === 'completed' || s.status === 'failed').length}
-          loading={scans.isPending}
-          to="/scans"
-          detail={running ? `${running} running now` : 'none running'}
-        />
-        <Readout
-          label="Open findings"
-          value={open.length}
-          loading={findings.isPending}
-          to="/findings?status=open,confirmed"
-          detail={`${confirmedCount} confirmed`}
-        />
-        <Readout
-          label="Critical open"
-          value={bySeverity.critical}
-          loading={findings.isPending}
-          to="/findings?sev=critical&status=open,confirmed"
-          tone="signal"
-          detail="exploitable, fix first"
-        />
-      </section>
+      <Panel label="status">
+        <div className="grid grid-cols-2 divide-wire-2 lg:grid-cols-4 lg:divide-x lg:divide-dashed">
+          <Readout
+            label="Targets"
+            value={targets.data?.length}
+            loading={targets.isPending}
+            to="/targets"
+            detail={`${prodTargets} in production`}
+          />
+          <Readout
+            label="Scans run"
+            value={scans.data?.filter((s) => s.status === 'completed' || s.status === 'failed').length}
+            loading={scans.isPending}
+            to="/scans"
+            detail={running ? `${running} running now` : 'none running'}
+          />
+          <Readout
+            label="Open findings"
+            value={open.length}
+            loading={findings.isPending}
+            to="/findings?status=open,confirmed"
+            detail={`${confirmedCount} confirmed`}
+          />
+          <Readout
+            label="Critical open"
+            value={bySeverity.critical}
+            loading={findings.isPending}
+            to="/findings?sev=critical&status=open,confirmed"
+            tone="signal"
+            detail="exploitable, fix first"
+          />
+        </div>
+      </Panel>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        <Panel label="Open findings by severity">
-          <PanelHeader
-            title="Open by severity"
-            actions={
-              <Link
-                to="/findings?status=open,confirmed"
-                className="font-mono text-[11.5px] text-ash hover:text-bone"
-              >
-                view all ›
-              </Link>
-            }
-          />
+        <Panel
+          label="open by severity"
+          meta={
+            <Link to="/findings?status=open,confirmed" className="hover:text-bone">
+              view all ›
+            </Link>
+          }
+        >
           <div className="px-4 py-5">
             {findings.isPending ? (
               <Skeleton className="h-24 w-full" />
@@ -175,23 +172,21 @@ export function DashboardPage() {
             )}
           </div>
         </Panel>
-        <Panel label="Severity trend">
-          <PanelHeader title="New findings per day · 30 days" />
+        <Panel label="new findings / day · 30d">
           <div className="px-4 py-5">
             {findings.isPending ? <Skeleton className="h-44 w-full" /> : <SeverityTrend days={trend} />}
           </div>
         </Panel>
       </div>
 
-      <Panel label="Recent scans">
-        <PanelHeader
-          title="Recent operations"
-          actions={
-            <Link to="/scans" className="font-mono text-[11.5px] text-ash hover:text-bone">
-              all scans ›
-            </Link>
-          }
-        />
+      <Panel
+        label="recent operations"
+        meta={
+          <Link to="/scans" className="hover:text-bone">
+            all scans ›
+          </Link>
+        }
+      >
         {scans.isPending ? (
           <SkeletonRows label="fetching /api/scans" rows={4} columns={['w-16', 'w-24', 'w-1/3', 'w-20']} />
         ) : scans.isError ? (
@@ -199,7 +194,7 @@ export function DashboardPage() {
         ) : recent.length === 0 ? (
           <EmptyState title="0 scans yet" detail="Launch a scan against a target to see it here." />
         ) : (
-          <ul className="divide-y divide-wire">
+          <ul className="divide-y divide-dashed divide-wire">
             {recent.map((scan) => (
               <li key={scan.id}>
                 <Link

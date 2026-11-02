@@ -250,7 +250,7 @@ export function FindingsPage() {
       <p className="sr-only" aria-live="polite">
         {findingsQuery.data ? `${result.total} findings match.` : ''}
       </p>
-      <Panel label="Findings table">
+      <Panel label="findings">
         <FilterBar
           query={query}
           counts={counts}

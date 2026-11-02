@@ -68,8 +68,8 @@ export function FindingDetail({
         <h1
           id={`title-${finding.id}`}
           className={cn(
-            'font-display leading-tight font-semibold tracking-wide text-bone uppercase',
-            variant === 'page' ? 'text-[22px] sm:text-[28px]' : 'text-[19px]',
+            'font-display leading-[0.95] tracking-wide text-bone uppercase',
+            variant === 'page' ? 'text-[34px] sm:text-[42px]' : 'text-[32px]',
           )}
         >
           {finding.title}

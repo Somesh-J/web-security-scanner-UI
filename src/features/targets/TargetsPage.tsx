@@ -91,7 +91,7 @@ export function TargetsPage() {
         <table className="w-full min-w-[860px] border-collapse text-left">
           <caption className="sr-only">Targets in scope</caption>
           <thead>
-            <tr className="border-b border-wire">
+            <tr className="border-b border-wire-2">
               {['Name', 'URL', 'Env', 'Last scanned', 'Open findings', ''].map((h, i) => (
                 <th key={h || i} scope="col" className={cn('label px-4 py-2.5', i === 5 && 'w-12')}>
                   {h || <span className="sr-only">Actions</span>}
@@ -105,7 +105,7 @@ export function TargetsPage() {
                 const scanCount = scans.filter((s) => s.targetId === t.id).length
                 const findingCount = findings.filter((f) => f.targetId === t.id).length
                 return (
-                  <tr key={t.id} className="border-b border-wire bg-signal/[0.07]">
+                  <tr key={t.id} className="border-b border-dashed border-wire bg-signal/[0.07]">
                     <td colSpan={6} className="px-4 py-3">
                       <div role="alert" className="flex flex-wrap items-center gap-3">
                         <p className="font-mono text-[12.5px] text-bone">
@@ -139,7 +139,7 @@ export function TargetsPage() {
                 )
               }
               return (
-                <tr key={t.id} className="border-b border-wire hover:bg-panel-2">
+                <tr key={t.id} className="border-b border-dashed border-wire hover:bg-panel-2">
                   <td className="px-4 py-3">
                     <p className="text-[13.5px] font-medium text-bone">{t.name}</p>
                     <p className="font-mono text-[11px] text-smoke">
@@ -241,8 +241,8 @@ export function TargetsPage() {
           </Button>
         }
       />
-      <Panel label="Targets">
-        <div className="border-b border-wire px-4 py-3">
+      <Panel label="targets in scope">
+        <div className="border-b border-dashed border-wire-2 px-4 py-3">
           <label htmlFor="target-search" className="sr-only">
             Search targets
           </label>

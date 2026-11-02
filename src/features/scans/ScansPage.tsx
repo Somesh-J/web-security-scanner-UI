@@ -108,7 +108,7 @@ export function ScansPage() {
         <table className="w-full min-w-[920px] border-collapse text-left">
           <caption className="sr-only">Scan runs. Completed scans open their findings.</caption>
           <thead>
-            <tr className="border-b border-wire">
+            <tr className="border-b border-wire-2">
               {['Status', 'Scan', 'Target', 'Started (UTC)', 'Duration', 'Findings / progress'].map((h) => (
                 <th key={h} scope="col" className="label px-4 py-2.5">
                   {h}
@@ -203,11 +203,11 @@ export function ScansPage() {
           </Button>
         }
       />
-      <Panel label="Scan runs">
+      <Panel label="scan runs">
         <div
           role="group"
           aria-label="Filter by status"
-          className="flex flex-wrap gap-1 border-b border-wire px-4 py-3"
+          className="flex flex-wrap gap-1 border-b border-dashed border-wire-2 px-4 py-3"
         >
           {[null, ...SCAN_STATUSES].map((s) => (
             <button
@@ -216,8 +216,8 @@ export function ScansPage() {
               aria-pressed={filter === s}
               onClick={() => setFilter(s)}
               className={cn(
-                'h-7 rounded-xs border px-2.5 font-mono text-[11.5px]',
-                filter === s ? 'border-bone bg-panel-2 text-bone' : 'border-wire text-ash hover:text-bone',
+                'h-7 px-2.5 font-mono text-[12px]',
+                filter === s ? 'bg-bone text-void' : 'text-ash hover:bg-panel-2 hover:text-bone',
               )}
             >
               {s ?? 'all'}{' '}
