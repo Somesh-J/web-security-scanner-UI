@@ -37,7 +37,7 @@ Requires Node 20+.
 6. **Reports**: the first load fails on purpose (the "failing endpoint"). Press Retry, then download a real PDF.
 7. **Settings**: switch theme (persists), and turn on _Simulate API outage_ to see every screen's error state.
 
-Keyboard: `/` or `Ctrl/⌘+K` focus the prompt · `g` then `d t s f r c` jump between screens · on findings `j`/`k` move, `Enter` open, `x` select · in the drawer `[` `]` previous/next, `1`–`4` set status, `Esc` close.
+Keyboard: `/` or `Ctrl/⌘+K` focus the prompt · `Alt+1`…`Alt+6` or `g` then `d t s f r c` switch windows · on findings `j`/`k` move, `Enter` open, `x` select · in the drawer `[` `]` previous/next, `1`–`4` set status, `Esc` close.
 
 ## Stack and why
 

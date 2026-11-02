@@ -24,23 +24,22 @@ src/
       → useReports / useCreateReport
   → components/
     → layout/
-      → AppShell.tsx — Shell layout, global shortcuts, scan-completion watcher
-      → Rail.tsx — Rail (desktop nav, pinnable), MobileNav (bottom tabs)
-      → ContextBar.tsx — Path breadcrumb, theme toggle, account menu
+      → AppShell.tsx — Shell layout, global shortcuts (/, Ctrl+K, g-chords, Alt+1..6), scan-completion watcher
+      → WindowBar.tsx — tmux-style window list (primary nav), theme toggle, account menu
       → StatusBar.tsx — Operator, live scans, API health, UTC clock
-      → Logo.tsx — Logo, LogoMark
-      → nav.ts — NAV_ITEMS (route, label, g-shortcut)
+      → Logo.tsx — LogoMark
+      → nav.ts — NAV_ITEMS (route, window name, g-shortcut)
     → ui/
-      → Button.tsx — Button, ButtonLink, Spinner
-      → buttonStyles.ts — buttonClass() variants/sizes
+      → Button.tsx — Button, ButtonLink ([ LABEL ] style), Spinner (| / - \)
+      → buttonStyles.ts — buttonClass() variants/sizes, BRACKET
       → Tags.tsx — SeverityTag, StatusMark, EnvTag, SeverityStrip
       → severityStyles.ts — SEV_TEXT, SEV_FILL class maps
-      → Field.tsx — TextField, SelectField, Switch (labelled, aria-invalid wiring)
+      → Field.tsx — TextField, SelectField, Switch ([ on]/[off]) with aria wiring
       → Dialog.tsx — Dialog, DialogBody, DialogFooter (Radix)
       → States.tsx — Skeleton, SkeletonRows, EmptyState, ErrorState, Kbd
       → Pagination.tsx — Page buttons + page size
       → ProgressRail.tsx — Scan progress bar + ASCII readout
-      → PageHeader.tsx — PageHeader, Panel, PanelHeader
+      → PageHeader.tsx — PageHeader (VT323 title), Panel (TUI pane, title in border), PanelHeader
       → Toaster.tsx — Live-region toast stack
       → Icons.tsx — Stroke icon set
   → features/

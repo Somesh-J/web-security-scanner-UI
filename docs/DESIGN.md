@@ -3,7 +3,18 @@
 Web security scanning console. Frontend intern assignment, seven screens.
 Stack fixed by the brief: React 18 + TypeScript + Vite + Tailwind + React Router.
 
-Status: **proposal v2 (red-team theme), awaiting approval.** Nothing is implemented yet.
+Status: **implemented**. See revision note below.
+
+> **Revision 3 (implemented).** After review, the dashboard-style shell was replaced by a true terminal (TUI) layout.
+> The brief specifies screens at the behaviour level only ("the visual design is yours"); it does not ask for a sidebar.
+>
+> - **Navigation:** tmux-style window list across the top (`1:dashboard 2:targets … 4:findings*`), active window in inverse video, `Alt+1…6`. No sidebar, no bottom tab bar.
+> - **Type:** Commit Mono for everything (no sans-serif at all), VT323 (CRT pixel face) only for screen titles, dialog titles and big readouts (≥ 26 px). Both self-hosted via @fontsource; no Google Fonts request.
+> - **Surfaces:** square, unfilled panes with the title set into the top border (`┤ FINDINGS ├`), dashed row rules, double-line dialog borders. Zero border radius.
+> - **Controls:** buttons render as `[ ADD TARGET ]` and invert on hover; filter chips are `[x]`/`[ ]` checkboxes with counts; toggles are `[ on]`/`[off]`; theme choice is `(•)`; spinner is `| / - \`.
+> - **Charts:** btop-style segmented block meters for severity, one block cell per finding in the 30-day histogram; segmented progress bars.
+>
+> Sections 5 and 4 below describe the earlier rail layout and Martian Mono / IBM Plex pairing and are kept for history.
 
 ---
 
