@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSeed } from '@/mocks/data/seed'
-import { findingsPerDay, openBySeverity } from './stats'
+import { checklistSteps, findingsPerDay, openBySeverity, openSince } from './stats'
 
 const NOW = Date.parse('2026-11-02T12:00:00Z')
 const seed = createSeed(NOW)
@@ -20,5 +20,35 @@ describe('dashboard stats', () => {
     const total = days.reduce((n, d) => n + d.total, 0)
     expect(total).toBe(seed.findings.length)
     for (const d of days) expect(Object.values(d.counts).reduce((a, b) => a + b, 0)).toBe(d.total)
+  })
+})
+
+describe('openSince', () => {
+  it('counts only open findings discovered inside the window', () => {
+    const week = openSince(seed.findings, 7, NOW)
+    const expected = seed.findings.filter(
+      (f) =>
+        (f.status === 'open' || f.status === 'confirmed') &&
+        Date.parse(f.discoveredAt) >= NOW - 7 * 86_400_000,
+    ).length
+    expect(week).toBe(expected)
+    expect(openSince(seed.findings, 0, NOW)).toBe(0)
+  })
+})
+
+describe('checklistSteps', () => {
+  it('marks each step done from real data', () => {
+    expect(checklistSteps({ targets: 0, scans: 0, reviewed: false, reports: 0 })).toEqual({
+      website: false,
+      scan: false,
+      review: false,
+      report: false,
+    })
+    expect(checklistSteps({ targets: 2, scans: 1, reviewed: true, reports: 3 })).toEqual({
+      website: true,
+      scan: true,
+      review: true,
+      report: true,
+    })
   })
 })

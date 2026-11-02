@@ -1,58 +1,43 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { CircleAlert, Eye, EyeOff } from 'lucide-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError, errorMessage } from '@/api/client'
+import { errorMessage } from '@/api/client'
 import { useLogin } from '@/api/queries'
-import { Button } from '@/components/ui/Button'
+import { Logo } from '@/components/layout/Logo'
+import { SeverityBadge } from '@/components/ui/Badges'
+import { Button, IconButton } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
-import { Panel } from '@/components/ui/PageHeader'
-import { LogoMark } from '@/components/layout/Logo'
-import { loginSchema, type LoginValues } from '@/lib/schemas'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { DEMO_ACCOUNT } from '@/lib/demo'
 import { safeNext } from '@/lib/safeNext'
+import { loginSchema, type LoginValues } from '@/lib/schemas'
 import { useAuthStore } from '@/stores/auth'
+import type { LoginInput, Severity } from '@/types/domain'
 
-const BOOT_LINES = [
-  'redcell console v2.6.0',
-  'loading modules ............ ok',
-  'tls 1.3 handshake .......... ok',
-  'mock api (msw) ............. ok',
-  'audit log .................. armed',
-  'awaiting operator',
+/** A static excerpt of the real "Fix first" list, so visitors see the product rather than a slogan. */
+const SAMPLE: { severity: Severity; title: string; site: string }[] = [
+  { severity: 'critical', title: 'SQL injection in product search', site: 'Acme Store' },
+  { severity: 'high', title: 'Reflected XSS in order status', site: 'Acme Store' },
+  { severity: 'medium', title: 'Missing security headers', site: 'Marketing Site' },
 ]
 
-/** Types the boot log once. Skips straight to the end on any key, and under reduced motion. */
-function useBootLog() {
-  const reduce =
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const [count, setCount] = useState(reduce ? BOOT_LINES.length : 0)
-  useEffect(() => {
-    if (count >= BOOT_LINES.length) return
-    const id = window.setTimeout(() => setCount((c) => c + 1), count === 0 ? 150 : 210)
-    const skip = () => setCount(BOOT_LINES.length)
-    window.addEventListener('keydown', skip, { once: true })
-    return () => {
-      window.clearTimeout(id)
-      window.removeEventListener('keydown', skip)
-    }
-  }, [count])
-  return BOOT_LINES.slice(0, count)
-}
-
 export function LoginPage() {
+  useDocumentTitle('Sign in')
   const token = useAuthStore((s) => s.session?.token)
   const signIn = useAuthStore((s) => s.signIn)
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const next = safeNext(params.get('next'))
   const login = useLogin()
-  const lines = useBootLog()
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
     handleSubmit,
     setValue,
+    clearErrors,
     formState: { errors },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -62,130 +47,123 @@ export function LoginPage() {
 
   if (token) return <Navigate to={next} replace />
 
-  const onSubmit = handleSubmit((values) => {
+  const submit = (values: LoginInput) =>
     login.mutate(values, {
       onSuccess: (session) => {
         signIn(session)
         navigate(next, { replace: true })
       },
     })
-  })
 
-  const authError =
-    login.error instanceof ApiError && login.error.status === 401
-      ? login.error.message
-      : login.error
-        ? errorMessage(login.error)
-        : null
+  const onSubmit = handleSubmit(submit)
+
+  /** Fills the demo credentials and signs in, in one click: the fastest path for first-time visitors. */
+  function signInWithDemo() {
+    setValue('email', DEMO_ACCOUNT.email)
+    setValue('password', DEMO_ACCOUNT.password)
+    clearErrors()
+    submit(DEMO_ACCOUNT)
+  }
+
+  const authError = login.error ? errorMessage(login.error) : null
 
   return (
-    <main className="grid min-h-dvh bg-void md:grid-cols-[1.1fr_1fr]">
-      {/* Left: the one ambient moment in the product. */}
+    <main className="grid min-h-dvh bg-bg lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <section
-        aria-label="System status"
-        className="relative hidden overflow-hidden border-r border-wire-2 bg-void md:flex md:flex-col md:justify-between md:p-10"
+        aria-label="About Clearsite"
+        className="hidden flex-col justify-between gap-12 border-r border-line bg-surface-2 p-12 lg:flex xl:p-16"
       >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-60"
-          style={{
-            backgroundImage: 'radial-gradient(circle, var(--wire-2) 1px, transparent 1px)',
-            backgroundSize: '22px 22px',
-            maskImage: 'linear-gradient(to bottom, black, transparent 85%)',
-          }}
-        />
-        <div className="relative flex items-center gap-3 text-bone">
-          <LogoMark />
-          <span className="font-display text-[26px] leading-none tracking-[0.1em]">REDCELL</span>
-        </div>
-        <pre className="relative font-mono text-[13px] leading-7 text-ash" aria-hidden>
-          {lines.map((line, i) => (
-            <div key={line}>
-              <span className="text-signal">&gt;</span> {line.replace(/ok$|armed$/, '')}
-              {/ok$/.test(line) && <span className="text-clear">ok</span>}
-              {/armed$/.test(line) && <span className="text-live">armed</span>}
-              {i === lines.length - 1 && i === BOOT_LINES.length - 1 && (
-                <span className="ml-1 animate-blink text-bone">█</span>
-              )}
-            </div>
-          ))}
-        </pre>
-        <div className="relative">
-          <p className="font-display text-[34px] leading-none tracking-wide text-bone uppercase">
-            Authorised targets only.
-          </p>
-          <p className="mt-2 max-w-sm text-[13px] text-ash">
-            Every scan from this console is logged. Only test systems you have written permission to test.
+        <Logo />
+
+        <div className="max-w-xl">
+          <h2 className="display text-[40px] leading-[1.1] font-semibold tracking-[-0.03em] text-ink">
+            Know what&rsquo;s wrong with your website, and how to fix it.
+          </h2>
+          <p className="mt-4 max-w-md text-[16px] leading-7 text-ink-2">
+            Clearsite scans your sites and APIs, then gives you a short fix list in plain English.
           </p>
         </div>
+
+        <figure aria-hidden className="card max-w-xl">
+          <figcaption className="flex items-center justify-between border-b border-line px-5 py-3">
+            <span className="text-[14px] font-semibold text-ink">Fix first</span>
+            <span className="text-[13px] text-ink-3">3 of 36 open issues</span>
+          </figcaption>
+          <ul className="divide-y divide-line">
+            {SAMPLE.map((row) => (
+              <li
+                key={row.title}
+                className="grid grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3"
+              >
+                <SeverityBadge severity={row.severity} className="justify-self-start" />
+                <span className="min-w-0">
+                  <span className="block truncate text-[14px] font-medium text-ink">{row.title}</span>
+                  <span className="block text-[13px] text-ink-3">{row.site}</span>
+                </span>
+                <span className="text-[13px] font-medium text-brand-text">How to fix</span>
+              </li>
+            ))}
+          </ul>
+        </figure>
       </section>
 
-      {/* Right: the access gate. */}
       <section className="flex items-center justify-center px-5 py-12">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center gap-3 text-bone md:hidden">
-            <LogoMark />
-            <span className="font-display text-[26px] leading-none tracking-[0.1em]">REDCELL</span>
-          </div>
-          <p className="font-mono text-[11px] text-smoke">~/login</p>
-          <h1 className="mt-1 font-display text-[48px] leading-none tracking-wide text-bone uppercase">
-            Access gate
+        <div className="w-full max-w-[380px]">
+          <Logo className="mb-10 lg:hidden" />
+          <h1 className="display text-[30px] leading-9 font-semibold tracking-[-0.025em] text-ink">
+            Sign in
           </h1>
-          <p className="mt-2 text-[13px] text-ash">Sign in to run scans and triage findings.</p>
+          <p className="mt-1.5 text-[15px] text-ink-2">Use your work email.</p>
 
-          <Panel label="auth" className="mt-8">
-            <form
-              noValidate
-              onSubmit={(e) => void onSubmit(e)}
-              className="flex flex-col gap-5 px-4 pt-5 pb-4"
-            >
-              <TextField
-                label="Operator email"
-                type="email"
-                autoComplete="username"
-                placeholder="you@company.com"
-                error={errors.email?.message}
-                {...register('email')}
-              />
-              <TextField
-                label="Passphrase"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                error={errors.password?.message}
-                {...register('password')}
-              />
-
-              {authError && (
-                <p
-                  role="alert"
-                  className="rounded-xs border border-signal/50 bg-signal/10 px-3 py-2 font-mono text-[12.5px] text-signal"
+          <form noValidate onSubmit={(e) => void onSubmit(e)} className="mt-8 flex flex-col gap-5">
+            <TextField
+              label="Email"
+              type="email"
+              autoComplete="username"
+              placeholder="you@company.com"
+              error={errors.email?.message}
+              {...register('email')}
+            />
+            <TextField
+              label="Password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              error={errors.password?.message}
+              trailing={
+                <IconButton
+                  size="sm"
+                  label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPassword((v) => !v)}
                 >
-                  ACCESS DENIED. {authError.replace(/^Access denied\.\s*/, '')}
-                </p>
-              )}
+                  {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
+                </IconButton>
+              }
+              {...register('password')}
+            />
 
-              <Button type="submit" variant="primary" loading={login.isPending} className="h-10 w-full">
-                {login.isPending ? 'Authenticating' : 'Authenticate'}
-              </Button>
-            </form>
-          </Panel>
+            {authError && (
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-md border border-danger/30 bg-danger-soft px-3 py-2.5 text-[14px] text-danger"
+              >
+                <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+                {authError}
+              </p>
+            )}
 
-          <div className="mt-6 border border-dashed border-wire-2 px-3 py-3">
-            <p className="label">Demo account</p>
-            <p className="mt-1.5 font-mono text-[12.5px] text-bone">
-              {DEMO_ACCOUNT.email} <span className="text-smoke">/</span> {DEMO_ACCOUNT.password}
+            <Button type="submit" variant="primary" size="lg" loading={login.isPending} className="w-full">
+              {login.isPending ? 'Signing in…' : 'Sign in'}
+            </Button>
+          </form>
+
+          <div className="mt-8 border-t border-line pt-6">
+            <p className="text-[14px] text-ink-2">Just looking around? Use the demo account.</p>
+            <Button className="mt-3 w-full" onClick={signInWithDemo} disabled={login.isPending}>
+              Try the demo account
+            </Button>
+            <p className="mt-3 text-[13px] text-ink-3">
+              {DEMO_ACCOUNT.email} / {DEMO_ACCOUNT.password}
             </p>
-            <button
-              type="button"
-              className="mt-2 font-mono text-[12px] text-live underline-offset-4 hover:underline"
-              onClick={() => {
-                setValue('email', DEMO_ACCOUNT.email, { shouldValidate: true })
-                setValue('password', DEMO_ACCOUNT.password, { shouldValidate: true })
-              }}
-            >
-              Fill demo credentials
-            </button>
           </div>
         </div>
       </section>

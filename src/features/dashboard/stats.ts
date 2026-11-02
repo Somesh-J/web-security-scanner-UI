@@ -45,3 +45,29 @@ export function findingsPerDay(findings: Finding[], days: number, now: number = 
 
 /** Severity order for stacking: most severe at the bottom of a column, nearest the baseline. */
 export const STACK_ORDER: Severity[] = [...SEVERITIES]
+
+/** Open findings discovered in the last `days` days. Drives the "+N this week" hint on the Overview. */
+export function openSince(findings: Finding[], days: number, now: number = Date.now()): number {
+  const from = now - days * 86_400_000
+  return findings.filter((f) => isOpenStatus(f.status) && new Date(f.discoveredAt).getTime() >= from).length
+}
+
+export interface ChecklistInput {
+  targets: number
+  scans: number
+  /** True once any finding has left the "open" (new) status, i.e. the user has reviewed one. */
+  reviewed: boolean
+  reports: number
+}
+
+export type ChecklistStepId = 'website' | 'scan' | 'review' | 'report'
+
+/** The brief's workflow as four "Get started" steps, each derived from real data. */
+export function checklistSteps(input: ChecklistInput): Record<ChecklistStepId, boolean> {
+  return {
+    website: input.targets > 0,
+    scan: input.scans > 0,
+    review: input.reviewed,
+    report: input.reports > 0,
+  }
+}

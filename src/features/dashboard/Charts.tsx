@@ -1,186 +1,216 @@
+import { CircleCheck } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { SEV_TEXT } from '@/components/ui/severityStyles'
+import { SEV_CHART_VAR } from '@/components/ui/severityStyles'
 import { cn } from '@/lib/cn'
-import { SEVERITY_LABEL, SEVERITY_TAG } from '@/lib/labels'
+import { SEVERITY_HELP, SEVERITY_LABEL } from '@/lib/labels'
 import { SEVERITIES, type Severity } from '@/types/domain'
 import { STACK_ORDER, type DayBucket, type SeverityCounts } from './stats'
 
 /**
- * btop-style charts. Bars are drawn as segmented blocks, like terminal block characters.
- * Colours come from the same CSS variables as the rest of the UI, so both themes work,
- * and every mark has a text equivalent (row labels and counts, or the hidden data table).
+ * Overview charts, hand-rolled SVG. Colours come from the same CSS variables as the rest of the UI,
+ * so both themes work, and every mark has a text equivalent (the legend counts, or a data table).
  */
 
-const SEV_VAR: Record<Severity, string> = {
-  critical: 'var(--sev-critical)',
-  high: 'var(--sev-high)',
-  medium: 'var(--sev-medium)',
-  low: 'var(--sev-low)',
-  info: 'var(--sev-info)',
-}
+const RADIUS = 52
+const STROKE = 16
+const CIRC = 2 * Math.PI * RADIUS
 
-/** 7px block, 2px gap: reads as a row of ▮ characters. */
-const blocks = (color: string) => `repeating-linear-gradient(90deg, ${color} 0 7px, transparent 7px 9px)`
-
-/** One segmented meter per severity. Each row opens that filtered findings view. */
-export function SeverityBreakdown({ counts }: { counts: SeverityCounts }) {
+/** Donut of open issues by severity, with the total in the centre and a legend that lists every count. */
+export function SeverityDonut({ counts }: { counts: SeverityCounts }) {
   const navigate = useNavigate()
-  const max = Math.max(1, ...SEVERITIES.map((s) => counts[s]))
+  const [hover, setHover] = useState<Severity | null>(null)
   const total = SEVERITIES.reduce((n, s) => n + counts[s], 0)
+  const open = (s: Severity) => navigate(`/findings?sev=${s}&status=open,confirmed`)
 
   if (total === 0)
-    return <p className="py-6 font-mono text-[12.5px] text-ash">$ 0 open findings. Nothing needs action.</p>
+    return (
+      <div className="flex flex-col items-center gap-2 py-10 text-center">
+        <CircleCheck aria-hidden className="size-8 text-success" />
+        <p className="text-[15px] font-medium text-ink">No open issues</p>
+        <p className="text-[13px] text-ink-2">Nothing needs your attention right now.</p>
+      </div>
+    )
+
+  // A small gap between slices keeps them readable; skip it when one severity is the whole ring.
+  const gap = SEVERITIES.filter((s) => counts[s] > 0).length > 1 ? 2 : 0
+  const present = SEVERITIES.filter((s) => counts[s] > 0)
+  const slices = present.map((s, i) => {
+    // Start of this slice = arc length of every slice before it.
+    const offset = present.slice(0, i).reduce((n, p) => n + (counts[p] / total) * CIRC, 0)
+    const len = (counts[s] / total) * CIRC
+    return { s, len: Math.max(0, len - gap), offset }
+  })
 
   return (
-    <ul className="flex flex-col gap-1" aria-label="Open findings by severity">
-      {SEVERITIES.map((s) => (
-        <li key={s}>
-          <button
-            type="button"
-            onClick={() => navigate(`/findings?sev=${s}&status=open,confirmed`)}
-            className="group grid w-full grid-cols-[44px_minmax(0,1fr)_32px] items-center gap-3 px-1 py-1.5 text-left font-mono text-[12px] hover:bg-panel-2"
-            aria-label={`${SEVERITY_LABEL[s]}: ${counts[s]} open. Show these findings.`}
-          >
-            <span className={cn('font-semibold', SEV_TEXT[s])}>{SEVERITY_TAG[s]}</span>
-            <span className="relative h-3.5" style={{ background: blocks('var(--wire)') }}>
-              <span
-                className="absolute inset-y-0 left-0 transition-[width] duration-500"
-                style={{ width: `${(counts[s] / max) * 100}%`, background: blocks(SEV_VAR[s]) }}
-              />
-            </span>
-            <span className="tabular text-right text-bone">{counts[s]}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
+      <div className="relative size-44 shrink-0">
+        <svg viewBox="0 0 140 140" className="size-full -rotate-90" aria-hidden>
+          <circle cx="70" cy="70" r={RADIUS} fill="none" stroke="var(--surface-2)" strokeWidth={STROKE} />
+          {slices.map(({ s, len, offset: o }) => (
+            <circle
+              key={s}
+              cx="70"
+              cy="70"
+              r={RADIUS}
+              fill="none"
+              stroke={SEV_CHART_VAR[s]}
+              strokeWidth={hover === s ? STROKE + 4 : STROKE}
+              strokeDasharray={`${len} ${CIRC - len}`}
+              strokeDashoffset={-o}
+              className="cursor-pointer transition-[stroke-width,opacity] duration-150"
+              opacity={hover && hover !== s ? 0.35 : 1}
+              onMouseEnter={() => setHover(s)}
+              onMouseLeave={() => setHover(null)}
+              onClick={() => open(s)}
+            />
+          ))}
+        </svg>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="display tabular text-[32px] leading-none font-semibold text-ink">
+            {hover ? counts[hover] : total}
+          </span>
+          <span className="mt-1 text-[12px] text-ink-3">{hover ? SEVERITY_LABEL[hover] : 'open issues'}</span>
+        </div>
+      </div>
+
+      <ul className="flex w-full min-w-0 flex-col gap-0.5" aria-label="Open issues by severity">
+        {SEVERITIES.map((s) => {
+          return (
+            <li key={s}>
+              <button
+                type="button"
+                onClick={() => open(s)}
+                onMouseEnter={() => setHover(s)}
+                onMouseLeave={() => setHover(null)}
+                onFocus={() => setHover(s)}
+                onBlur={() => setHover(null)}
+                title={SEVERITY_HELP[s]}
+                aria-label={`${SEVERITY_LABEL[s]}: ${counts[s]} open. Show these issues.`}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-md px-2.5 py-1.5 text-left text-[14px] transition-colors hover:bg-surface-2',
+                  counts[s] === 0 && 'opacity-60',
+                )}
+              >
+                <span
+                  aria-hidden
+                  className="size-2.5 shrink-0 rounded-sm"
+                  style={{ background: SEV_CHART_VAR[s] }}
+                />
+                <span className="flex-1 text-ink">{SEVERITY_LABEL[s]}</span>
+                <span className="tabular font-semibold text-ink">{counts[s]}</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 
-/**
- * New findings per day, stacked by severity. Each finding is one block cell, so the chart reads
- * like a terminal histogram. Hover a column for the breakdown; a data table is provided for screen readers.
- */
-export function SeverityTrend({ days }: { days: DayBucket[] }) {
-  const [hover, setHover] = useState<number | null>(null)
-  const W = 640
-  const H = 190
-  const pad = { top: 8, right: 4, bottom: 22, left: 24 }
-  const innerW = W - pad.left - pad.right
-  const innerH = H - pad.top - pad.bottom
-  const max = Math.max(4, ...days.map((d) => d.total))
-  const niceMax = Math.ceil(max / 4) * 4
-  const ticks = [0, niceMax / 2, niceMax]
-  const slot = innerW / days.length
-  const barW = Math.max(4, slot - 6)
-  const cell = innerH / niceMax
-  const y = (v: number) => pad.top + innerH - v * cell
-  const active = hover !== null ? days[hover] : undefined
-  const totalAll = days.reduce((n, d) => n + d.total, 0)
+const shortDate = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
+
+/** New issues per day for the last 30 days, as stacked columns. Hover or focus a day for its breakdown. */
+export function IssuesOverTime({ days }: { days: DayBucket[] }) {
+  const [active, setActive] = useState<number | null>(null)
+  const max = Math.max(1, ...days.map((d) => d.total))
+  const total = days.reduce((n, d) => n + d.total, 0)
+  const shown = active !== null ? days[active] : undefined
+  const first = days[0]
+  const last = days.at(-1)
 
   return (
-    <div className="relative">
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="block h-auto w-full overflow-visible"
-        role="img"
-        aria-label={`New findings per day over the last ${days.length} days, ${totalAll} in total. A data table follows.`}
-        onMouseLeave={() => setHover(null)}
-      >
-        {ticks.map((t) => (
-          <g key={t}>
-            <line
-              x1={pad.left}
-              x2={W - pad.right}
-              y1={y(t)}
-              y2={y(t)}
-              stroke="var(--wire)"
-              strokeWidth={1}
-              strokeDasharray={t === 0 ? undefined : '1 5'}
-            />
-            <text
-              x={pad.left - 8}
-              y={y(t) + 3.5}
-              textAnchor="end"
-              className="fill-smoke font-mono text-[10px]"
-            >
-              {t}
-            </text>
-          </g>
-        ))}
-        {days.map((d, i) => {
-          const x = pad.left + i * slot + (slot - barW) / 2
-          const cells: { key: string; s: Severity; n: number }[] = []
-          let n = 0
-          for (const s of STACK_ORDER)
-            for (let k = 0; k < d.counts[s]; k++) cells.push({ key: `${s}${k}`, s, n: n++ })
-          return (
-            <g key={d.date} opacity={hover === null || hover === i ? 1 : 0.35}>
-              {cells.map((c) => (
-                <rect
-                  key={c.key}
-                  x={x}
-                  y={y(c.n + 1) + 1}
-                  width={barW}
-                  height={Math.max(1, cell - 2)}
-                  fill={SEV_VAR[c.s]}
-                />
-              ))}
-              <rect
-                x={pad.left + i * slot}
-                y={pad.top}
-                width={slot}
-                height={innerH}
-                fill="transparent"
-                onMouseEnter={() => setHover(i)}
-              />
-            </g>
-          )
-        })}
-        {days.map((d, i) =>
-          (i % 7 === 0 && days.length - 1 - i >= 4) || i === days.length - 1 ? (
-            <text
-              key={d.date}
-              x={pad.left + i * slot + slot / 2}
-              y={H - 6}
-              textAnchor="middle"
-              className="fill-smoke font-mono text-[10px]"
-            >
-              {i === days.length - 1 ? 'today' : d.date.slice(5)}
-            </text>
-          ) : null,
-        )}
-      </svg>
-
-      {active && hover !== null && (
-        <div
-          className="pointer-events-none absolute top-0 z-10 min-w-36 -translate-x-1/2 border border-wire-2 bg-void px-2.5 py-2 font-mono text-[11.5px] shadow-pop"
-          style={{ left: `${((pad.left + hover * slot + slot / 2) / W) * 100}%` }}
-        >
-          <p className="text-bone">
-            {active.date} · {active.total} new
-          </p>
-          {SEVERITIES.filter((s) => active.counts[s]).map((s) => (
-            <p key={s} className="whitespace-pre text-ash">
-              <span className={SEV_TEXT[s]}>{SEVERITY_TAG[s].padEnd(4, ' ')}</span> {active.counts[s]}
+    <div className="flex flex-col gap-3">
+      <div className="flex min-h-11 items-baseline justify-between gap-4">
+        {shown ? (
+          <div>
+            <p className="text-[13px] text-ink-3">{shortDate(shown.date)}</p>
+            <p className="text-[14px] text-ink">
+              <span className="tabular font-semibold">{shown.total}</span> new issue
+              {shown.total === 1 ? '' : 's'}
+              {shown.total > 0 && (
+                <span className="text-ink-2">
+                  {' '}
+                  (
+                  {SEVERITIES.filter((s) => shown.counts[s] > 0)
+                    .map((s) => `${shown.counts[s]} ${SEVERITY_LABEL[s]}`)
+                    .join(', ')}
+                  )
+                </span>
+              )}
             </p>
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div>
+            <p className="text-[13px] text-ink-3">Last 30 days</p>
+            <p className="text-[14px] text-ink">
+              <span className="tabular font-semibold">{total}</span> new issues found
+            </p>
+          </div>
+        )}
+      </div>
 
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-ash" aria-label="Legend">
-        {SEVERITIES.map((s) => (
-          <li key={s} className="flex items-center gap-1.5">
-            <span aria-hidden className={SEV_TEXT[s]}>
-              ■
-            </span>
-            {SEVERITY_LABEL[s].toLowerCase()}
-          </li>
+      <div
+        className="flex h-40 items-end gap-[3px]"
+        role="group"
+        aria-label="New issues per day. Use Tab to move between days."
+        onMouseLeave={() => setActive(null)}
+      >
+        {days.map((d, i) => (
+          <button
+            key={d.date}
+            type="button"
+            onMouseEnter={() => setActive(i)}
+            onFocus={() => setActive(i)}
+            onBlur={() => setActive(null)}
+            aria-label={`${shortDate(d.date)}: ${d.total} new issues`}
+            className={cn(
+              'group flex h-full min-w-0 flex-1 flex-col-reverse rounded-[3px] focus-visible:outline-offset-1',
+              active === i && 'bg-surface-2',
+            )}
+          >
+            {d.total === 0 ? (
+              <span aria-hidden className="h-[2px] w-full rounded-full bg-line" />
+            ) : (
+              [...STACK_ORDER].map((s) =>
+                d.counts[s] ? (
+                  <span
+                    key={s}
+                    aria-hidden
+                    className="w-full first:rounded-b-[3px] last:rounded-t-[3px]"
+                    style={{
+                      height: `${(d.counts[s] / max) * 100}%`,
+                      background: SEV_CHART_VAR[s],
+                      opacity: active === null || active === i ? 1 : 0.45,
+                    }}
+                  />
+                ) : null,
+              )
+            )}
+          </button>
         ))}
-      </ul>
+      </div>
+      <div className="flex justify-between text-[12px] text-ink-3" aria-hidden>
+        <span>{first && shortDate(first.date)}</span>
+        <span>{last && shortDate(last.date)}</span>
+      </div>
+
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-ink-2" aria-hidden>
+        {SEVERITIES.map((s) => (
+          <span key={s} className="inline-flex items-center gap-1.5">
+            <span className="size-2 rounded-sm" style={{ background: SEV_CHART_VAR[s] }} />
+            {SEVERITY_LABEL[s]}
+          </span>
+        ))}
+      </div>
 
       <table className="sr-only">
-        <caption>New findings per day by severity</caption>
+        <caption>New issues per day, last 30 days</caption>
         <thead>
           <tr>
             <th scope="col">Date</th>
@@ -189,6 +219,7 @@ export function SeverityTrend({ days }: { days: DayBucket[] }) {
                 {SEVERITY_LABEL[s]}
               </th>
             ))}
+            <th scope="col">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -200,6 +231,7 @@ export function SeverityTrend({ days }: { days: DayBucket[] }) {
                 {SEVERITIES.map((s) => (
                   <td key={s}>{d.counts[s]}</td>
                 ))}
+                <td>{d.total}</td>
               </tr>
             ))}
         </tbody>
