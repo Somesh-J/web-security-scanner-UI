@@ -1,5 +1,4 @@
 import { useAuthStore } from '@/stores/auth'
-import { useNetStore } from '@/stores/net'
 
 /** Error thrown for any non-2xx response. `message` is the server's human-readable explanation. */
 export class ApiError extends Error {
@@ -23,7 +22,6 @@ type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 export async function api<T>(path: string, init: { method?: Method; body?: unknown } = {}): Promise<T> {
   const token = useAuthStore.getState().session?.token
   let response: Response
-  const started = performance.now()
   try {
     response = await fetch(path, {
       method: init.method ?? 'GET',
@@ -35,12 +33,10 @@ export async function api<T>(path: string, init: { method?: Method; body?: unkno
       body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
     })
   } catch (e) {
-    // A cancelled request is not an API failure, so it must not turn the health indicator red.
+    // A cancelled request is not an API failure; let TanStack Query handle the abort.
     if (e instanceof DOMException && e.name === 'AbortError') throw e
-    useNetStore.getState().record(performance.now() - started, false)
     throw new ApiError(0, 'The network request failed. Check your connection and try again.', path)
   }
-  useNetStore.getState().record(performance.now() - started, response.ok)
 
   if (!response.ok) {
     let message = `Request failed with status ${response.status}.`

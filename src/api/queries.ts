@@ -25,15 +25,22 @@ export const queryKeys = {
   reports: ['reports'] as const,
 }
 
+/** A failure worth retrying automatically: the request may well succeed a moment later. */
+export function isTransient(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 0 || error.status === 503)
+}
+
 export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 30_000,
         refetchOnWindowFocus: false,
-        // Only retry transport failures. HTTP errors surface immediately so the error state is visible
-        // and the user decides when to retry.
-        retry: (count, error) => error instanceof ApiError && error.status === 0 && count < 2,
+        // Retry only failures that are temporary by definition: the network dropped (status 0) or the
+        // service was briefly unavailable (503). Anything else (404, 500 outage, 400) surfaces at once so
+        // the error state is visible and the user decides when to try again.
+        retry: (count, error) => isTransient(error) && count < 2,
+        retryDelay: (attempt) => Math.min(400 * 2 ** attempt, 2000),
       },
       mutations: { retry: false },
     },
@@ -60,7 +67,7 @@ export function useCreateTarget() {
     mutationFn: (input: TargetInput) => api<Target>('/api/targets', { method: 'POST', body: input }),
     onSuccess: (created) => {
       qc.setQueryData<Target[]>(queryKeys.targets, (old) => (old ? [...old, created] : [created]))
-      toast.success('Target added', `${created.name} is ready to scan.`)
+      toast.success('Website added', `${created.name} is ready to scan.`)
     },
   })
 }
@@ -93,7 +100,7 @@ export function useUpdateTarget() {
       qc.setQueryData<Target[]>(queryKeys.targets, (old) =>
         old?.map((t) => (t.id === updated.id ? updated : t)),
       )
-      toast.success('Target saved', updated.name)
+      toast.success('Changes saved', updated.name)
     },
   })
 }
@@ -116,7 +123,7 @@ export function useDeleteTarget() {
       // The backend cascades to the target's scans and findings.
       void qc.invalidateQueries({ queryKey: queryKeys.scans })
       void qc.invalidateQueries({ queryKey: queryKeys.findings })
-      toast.success('Target removed', target.name)
+      toast.success('Website removed', target.name)
     },
   })
 }
@@ -140,7 +147,7 @@ export function useCreateScan() {
     onSuccess: (scan) => {
       qc.setQueryData<Scan[]>(queryKeys.scans, (old) => (old ? [scan, ...old] : [scan]))
       void qc.invalidateQueries({ queryKey: queryKeys.scans })
-      toast.success(`${scan.id} queued`, 'It starts in a few seconds. Progress updates live.')
+      toast.success('Scan started', "It begins in a few seconds. We'll let you know when it's done.")
     },
   })
 }
@@ -211,7 +218,7 @@ export function useCreateReport() {
     mutationFn: (scanId: string) => api<Report>('/api/reports', { method: 'POST', body: { scanId } }),
     onSuccess: (report) => {
       qc.setQueryData<Report[]>(queryKeys.reports, (old) => (old ? [report, ...old] : old))
-      toast.success(`${report.id} generated`, `${report.target} · ${report.findings} findings`)
+      toast.success('Report created', `${report.target} · ${report.findings} issues`)
     },
   })
 }

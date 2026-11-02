@@ -52,8 +52,10 @@ async function respond(latency: () => number, run: () => Response, faultable = f
 export function createHandlers(options: HandlerOptions = {}) {
   const db = options.db ?? createDb()
   const latency = options.latency ?? randomLatency
-  // The reports endpoint fails on its first request in every page load. This is the failing endpoint
-  // the brief asks for: the error state and its Retry action can be demonstrated every time.
+  // The reports endpoint fails on its first request in every page load with a 503 (temporarily
+  // unavailable). This is the failing endpoint the brief asks for. The client treats 503 as transient and
+  // retries with backoff, so the user sees the list after a short delay instead of an error. The visible
+  // error state is demonstrated with Settings > "Simulate a server outage" (a 500 that is not retried).
   let reportsShouldFail = options.failReportsOnce ?? true
 
   return [
@@ -61,14 +63,14 @@ export function createHandlers(options: HandlerOptions = {}) {
       const body = await readJson(request)
       return respond(latency, () => {
         const parsed = loginSchema.safeParse(body)
-        if (!parsed.success) return fail(400, 'Email and passphrase are required.')
+        if (!parsed.success) return fail(400, 'Email and password are required.')
         const { email, password } = parsed.data
         if (email.toLowerCase() !== DEMO_ACCOUNT.email || password !== DEMO_ACCOUNT.password) {
-          return fail(401, 'Access denied. The email or passphrase is wrong.')
+          return fail(401, "That email or password doesn't match. Try again, or use the demo account.")
         }
         const session: Session = {
-          token: `rc_${crypto.randomUUID().replaceAll('-', '')}`,
-          user: { name: 'Alex Mercer', email: DEMO_ACCOUNT.email, role: 'Red team lead' },
+          token: `cs_${crypto.randomUUID().replaceAll('-', '')}`,
+          user: { name: 'Alex Mercer', email: DEMO_ACCOUNT.email, role: 'Security lead' },
         }
         return HttpResponse.json(session)
       })
