@@ -15,28 +15,28 @@ A red team is the unit that attacks its own organisation to find the holes first
 
 The trap with "hacker" themes is the movie version: falling green code, glitch effects on everything, skull icons, unreadable neon. Real operator tooling is the opposite. It is **monospace, dense, terse, and log-shaped**. Colour is rare and always means something. That restraint is what will make this look like a real product instead of a costume.
 
-| | |
-|---|---|
-| **Identity** | An offensive-ops terminal. Near-black with a faint warm bias, one signal red, everything else bone-white and grey. |
-| **Vernacular** | Log levels, prompts, brackets, IDs, timestamps in UTC, ASCII progress bars, redaction bars. All of these are real conventions in the tools above, used here as content, not decoration. |
-| **Signature** | **The prompt.** A persistent command line, `redcell:~/findings$`, that is both the command palette and a typed filter language. Type `sev:crit status:open cwe:89` and the findings table filters live. Chips and the prompt are two views of one state, mirrored in the URL. |
-| **Hero moment** | **The evidence panel.** Raw request and response side by side like a Burp Repeater tab, line-numbered, the injected payload boxed in red, the leaked error underlined. |
-| **Name** | **REDCELL** ("red cell" is the military and intelligence term for a red team unit). Alternatives: Breachpoint, Nightwatch, Payload. |
+|                 |                                                                                                                                                                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Identity**    | An offensive-ops terminal. Near-black with a faint warm bias, one signal red, everything else bone-white and grey.                                                                                                                                                            |
+| **Vernacular**  | Log levels, prompts, brackets, IDs, timestamps in UTC, ASCII progress bars, redaction bars. All of these are real conventions in the tools above, used here as content, not decoration.                                                                                       |
+| **Signature**   | **The prompt.** A persistent command line, `redcell:~/findings$`, that is both the command palette and a typed filter language. Type `sev:crit status:open cwe:89` and the findings table filters live. Chips and the prompt are two views of one state, mirrored in the URL. |
+| **Hero moment** | **The evidence panel.** Raw request and response side by side like a Burp Repeater tab, line-numbered, the injected payload boxed in red, the leaked error underlined.                                                                                                        |
+| **Name**        | **REDCELL** ("red cell" is the military and intelligence term for a red team unit). Alternatives: Breachpoint, Nightwatch, Payload.                                                                                                                                           |
 
 ## 2. Research and references
 
-| Reference | What it does well | Take | Leave |
-|---|---|---|---|
-| **nuclei (ProjectDiscovery)** | CLI output tags findings as `[critical] [high] [medium]`, one per line, scannable | Bracketed severity tags as the core severity marker | — |
-| **Burp Suite Repeater** | Request and response side by side, raw HTTP, payload in context | Evidence panel layout and payload highlighting | 2010 desktop chrome |
-| **Metasploit / msfconsole** | Prompt-driven, every action a typed command | The prompt as the primary power-user surface | Having *only* a CLI |
-| **nmap / masscan output** | Progress as text: `Stats: 0:04:12 elapsed; 62.00% done` | ASCII progress readout under the real progress bar | — |
-| **tmux / terminal multiplexers** | Status bar along the edge with session, host, clock | Bottom status bar: operator, clock (UTC), API health, scans running | — |
-| **Wiz** | Benchmark for security product UI: purposeful dark, severity-tinted marks, side drawer | Inspector drawer over the table | Graph visualisations (no relationship data in the contract) |
-| **CrowdStrike Falcon** | Red/black/grey brand, analysts act fast on telemetry | Red as the single brand chroma | Marketing gloss |
-| **Linear** | Grey foundation, saturation only for status, 4px grid, skeletons, under 200ms transitions, Cmd+K | All of these as engineering constraints | Purple glow, gradient art |
-| **Stripe tables** | 13 to 14px, tables lead, charts only where a trend needs shape | Table-first dashboard, two charts maximum | — |
-| **Declassified documents** | Redaction bars, CONFIDENTIAL stamps, case numbers | Secrets shown as redaction bars; reports styled as an ops dossier; the brief itself is stamped CONFIDENTIAL | — |
+| Reference                        | What it does well                                                                                | Take                                                                                                        | Leave                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **nuclei (ProjectDiscovery)**    | CLI output tags findings as `[critical] [high] [medium]`, one per line, scannable                | Bracketed severity tags as the core severity marker                                                         | —                                                           |
+| **Burp Suite Repeater**          | Request and response side by side, raw HTTP, payload in context                                  | Evidence panel layout and payload highlighting                                                              | 2010 desktop chrome                                         |
+| **Metasploit / msfconsole**      | Prompt-driven, every action a typed command                                                      | The prompt as the primary power-user surface                                                                | Having _only_ a CLI                                         |
+| **nmap / masscan output**        | Progress as text: `Stats: 0:04:12 elapsed; 62.00% done`                                          | ASCII progress readout under the real progress bar                                                          | —                                                           |
+| **tmux / terminal multiplexers** | Status bar along the edge with session, host, clock                                              | Bottom status bar: operator, clock (UTC), API health, scans running                                         | —                                                           |
+| **Wiz**                          | Benchmark for security product UI: purposeful dark, severity-tinted marks, side drawer           | Inspector drawer over the table                                                                             | Graph visualisations (no relationship data in the contract) |
+| **CrowdStrike Falcon**           | Red/black/grey brand, analysts act fast on telemetry                                             | Red as the single brand chroma                                                                              | Marketing gloss                                             |
+| **Linear**                       | Grey foundation, saturation only for status, 4px grid, skeletons, under 200ms transitions, Cmd+K | All of these as engineering constraints                                                                     | Purple glow, gradient art                                   |
+| **Stripe tables**                | 13 to 14px, tables lead, charts only where a trend needs shape                                   | Table-first dashboard, two charts maximum                                                                   | —                                                           |
+| **Declassified documents**       | Redaction bars, CONFIDENTIAL stamps, case numbers                                                | Secrets shown as redaction bars; reports styled as an ops dossier; the brief itself is stamped CONFIDENTIAL | —                                                           |
 
 Sources: Design Monks cybersecurity examples; Wiz vs CrowdStrike comparison; 925 Studios Linear breakdown; BuildMVPFast "Linear aesthetic decoded"; Snyk vulnerability cards post; PortSwigger Burp DAST features; Mobbin cybersecurity dashboards; Raycast design notes; ProjectDiscovery nuclei output format.
 
@@ -50,42 +50,42 @@ Sources: Design Monks cybersecurity examples; Wiz vs CrowdStrike comparison; 925
 
 ### Rule
 
-**Red means the attacker won.** Signal red is the brand, and it is also critical severity and the primary "launch" action. These are the same idea: an exploit, a breach, the decision to fire. Everything that is *not* that idea stays monochrome.
+**Red means the attacker won.** Signal red is the brand, and it is also critical severity and the primary "launch" action. These are the same idea: an exploit, a breach, the decision to fire. Everything that is _not_ that idea stays monochrome.
 
 ### Dark theme — "Ops" (default)
 
-| Token | Hex | Role |
-|---|---|---|
-| `--void` | `#0A0A0C` | App background |
-| `--panel` | `#111014` | Tables, cards, drawer |
-| `--panel-2` | `#18161C` | Hover row, inputs, raised |
-| `--wire` | `#2A2630` | Hairline borders, grid lines |
-| `--wire-2` | `#3A3442` | Strong borders, focused inputs |
-| `--bone` | `#ECE8E1` | Primary text |
-| `--ash` | `#8E8893` | Secondary text |
-| `--smoke` | `#5E5964` | Tertiary text, line numbers |
-| `--signal` | `#FF3B4E` | Brand, primary action, critical |
-| `--signal-dim` | `rgba(255,59,78,.12)` | Payload highlight, selected row tint |
-| `--live` | `#3FD0E0` | Running, focus ring, cursor (the "wire is hot" colour) |
-| `--clear` | `#4ADE80` | Resolved only |
+| Token          | Hex                   | Role                                                   |
+| -------------- | --------------------- | ------------------------------------------------------ |
+| `--void`       | `#0A0A0C`             | App background                                         |
+| `--panel`      | `#111014`             | Tables, cards, drawer                                  |
+| `--panel-2`    | `#18161C`             | Hover row, inputs, raised                              |
+| `--wire`       | `#2A2630`             | Hairline borders, grid lines                           |
+| `--wire-2`     | `#3A3442`             | Strong borders, focused inputs                         |
+| `--bone`       | `#ECE8E1`             | Primary text                                           |
+| `--ash`        | `#8E8893`             | Secondary text                                         |
+| `--smoke`      | `#5E5964`             | Tertiary text, line numbers                            |
+| `--signal`     | `#FF3B4E`             | Brand, primary action, critical                        |
+| `--signal-dim` | `rgba(255,59,78,.12)` | Payload highlight, selected row tint                   |
+| `--live`       | `#3FD0E0`             | Running, focus ring, cursor (the "wire is hot" colour) |
+| `--clear`      | `#4ADE80`             | Resolved only                                          |
 
 ### Light theme — "Dossier"
 
 A printed operations file: cool paper, black ink, red stamp. Not the cream-and-serif look.
 
-| Token | Hex |
-|---|---|
-| `--void` | `#E9EBEE` |
-| `--panel` | `#F7F8FA` |
+| Token       | Hex       |
+| ----------- | --------- |
+| `--void`    | `#E9EBEE` |
+| `--panel`   | `#F7F8FA` |
 | `--panel-2` | `#EEF0F3` |
-| `--wire` | `#D5D9DF` |
-| `--wire-2` | `#B7BDC6` |
-| `--bone` | `#0E0F12` |
-| `--ash` | `#535862` |
-| `--smoke` | `#8A909A` |
-| `--signal` | `#D0152B` |
-| `--live` | `#0B7A8A` |
-| `--clear` | `#15803D` |
+| `--wire`    | `#D5D9DF` |
+| `--wire-2`  | `#B7BDC6` |
+| `--bone`    | `#0E0F12` |
+| `--ash`     | `#535862` |
+| `--smoke`   | `#8A909A` |
+| `--signal`  | `#D0152B` |
+| `--live`    | `#0B7A8A` |
+| `--clear`   | `#15803D` |
 
 ### Severity
 
@@ -95,21 +95,21 @@ Severity is shown as a **fixed-width bracketed tag**, exactly as offensive CLI t
 [CRIT]   [HIGH]   [MED ]   [LOW ]   [INFO]
 ```
 
-| Level | Tag | Dark | Light |
-|---|---|---|---|
+| Level    | Tag      | Dark                             | Light     |
+| -------- | -------- | -------------------------------- | --------- |
 | critical | `[CRIT]` | `#FF3B4E` on `--signal-dim` fill | `#D0152B` |
-| high | `[HIGH]` | `#FF8F3F` | `#C2570A` |
-| medium | `[MED ]` | `#F2D14C` | `#8F6A00` |
-| low | `[LOW ]` | `#3FD0E0` | `#0B7A8A` |
-| info | `[INFO]` | `--ash` | `--ash` |
+| high     | `[HIGH]` | `#FF8F3F`                        | `#C2570A` |
+| medium   | `[MED ]` | `#F2D14C`                        | `#8F6A00` |
+| low      | `[LOW ]` | `#3FD0E0`                        | `#0B7A8A` |
+| info     | `[INFO]` | `--ash`                          | `--ash`   |
 
 **Validator result.** I ran both sets through a colour-vision validator.
 
-| Check | Dark | Light |
-|---|---|---|
+| Check                                 | Dark                 | Light                                    |
+| ------------------------------------- | -------------------- | ---------------------------------------- |
 | Colour-blind separation of neighbours | Pass (worst ΔE 10.2) | Fail (orange vs amber ΔE 1.0 for protan) |
-| Normal-vision separation | Pass (worst ΔE 15.7) | Fail (ΔE 10.0) |
-| Contrast against surface | Pass, all ≥ 3:1 | Pass, all ≥ 3:1 |
+| Normal-vision separation              | Pass (worst ΔE 15.7) | Fail (ΔE 10.0)                           |
+| Contrast against surface              | Pass, all ≥ 3:1      | Pass, all ≥ 3:1                          |
 
 No light-background red-to-amber ramp passes this, which is why severity is **never colour alone**. The four-letter tag is always present. Only critical gets a filled background, so the most important row is also distinct by shape.
 
@@ -117,23 +117,23 @@ No light-background red-to-amber ramp passes this, which is why severity is **ne
 
 Status uses a terminal glyph plus a word, so it survives greyscale.
 
-| Status | Render |
-|---|---|
-| open | `○ open` in `--bone` |
-| confirmed | `● confirmed` in `--signal` |
-| resolved | `✓ resolved` in `--clear` |
+| Status         | Render                                          |
+| -------------- | ----------------------------------------------- |
+| open           | `○ open` in `--bone`                            |
+| confirmed      | `● confirmed` in `--signal`                     |
+| resolved       | `✓ resolved` in `--clear`                       |
 | false_positive | `⊘ false positive` in `--smoke`, struck through |
 
 ## 4. Typography
 
 The type does most of the theming. Mono dominates, sans is reserved for prose that people actually read.
 
-| Role | Face | Size / weight | Used for |
-|---|---|---|---|
-| Display | **Martian Mono** (Google Fonts, variable width) | 24–32 / 600, width 112, uppercase | Screen titles, finding title on detail page, login gate |
-| Data | **JetBrains Mono** | 13 / 400–500, tabular | Tables, IDs, URLs, CWE, timestamps, tags, prompt, evidence |
-| Label | JetBrains Mono | 11 / 500, uppercase, +0.1em | Column headers, panel labels, status bar |
-| Prose | **IBM Plex Sans** | 14 / 400, line-height 1.6, max 68ch | Descriptions, remediation, form help, empty states |
+| Role    | Face                                            | Size / weight                       | Used for                                                   |
+| ------- | ----------------------------------------------- | ----------------------------------- | ---------------------------------------------------------- |
+| Display | **Martian Mono** (Google Fonts, variable width) | 24–32 / 600, width 112, uppercase   | Screen titles, finding title on detail page, login gate    |
+| Data    | **JetBrains Mono**                              | 13 / 400–500, tabular               | Tables, IDs, URLs, CWE, timestamps, tags, prompt, evidence |
+| Label   | JetBrains Mono                                  | 11 / 500, uppercase, +0.1em         | Column headers, panel labels, status bar                   |
+| Prose   | **IBM Plex Sans**                               | 14 / 400, line-height 1.6, max 68ch | Descriptions, remediation, form help, empty states         |
 
 Rule: **machines speak mono, humans speak sans.** Martian Mono is the one characterful face, used only for titles. It is wide, hard-edged and unusual, and it is not the Space Mono or Share Tech that every hacker template uses.
 
@@ -342,7 +342,7 @@ Use parameterised queries. Validate and encode input.
 
 ```
 REPORTS                                                  [ GENERATE REPORT ]
-ID       TARGET        SCAN       FINDINGS                 CREATED      
+ID       TARGET        SCAN       FINDINGS                 CREATED
 rpt_09   Acme Store    scan_118   CRIT 1 HIGH 2 MED 3 LOW 1  02-18 10:00   [ ↓ PDF ]
 ```
 
@@ -364,14 +364,14 @@ API KEY       rc_live_████████████████  [ reveal
 
 Six moments. Nothing else moves. All are removed under `prefers-reduced-motion`.
 
-| # | Moment | Duration |
-|---|---|---|
-| 1 | Login boot log types once | about 1.2s, skippable |
-| 2 | Dashboard readouts count up | 900ms, ease-out |
-| 3 | Prompt cursor blinks | 1s steps, only while focused |
-| 4 | Running scan: bar advance, ASCII readout, log tail, live dot pulse | continuous, only while running |
-| 5 | Drawer slides in | 180ms |
-| 6 | Status stepper fills | 150ms |
+| #   | Moment                                                             | Duration                       |
+| --- | ------------------------------------------------------------------ | ------------------------------ |
+| 1   | Login boot log types once                                          | about 1.2s, skippable          |
+| 2   | Dashboard readouts count up                                        | 900ms, ease-out                |
+| 3   | Prompt cursor blinks                                               | 1s steps, only while focused   |
+| 4   | Running scan: bar advance, ASCII readout, log tail, live dot pulse | continuous, only while running |
+| 5   | Drawer slides in                                                   | 180ms                          |
+| 6   | Status stepper fills                                               | 150ms                          |
 
 Deliberately excluded: glitch effects, matrix rain, typing effects on every heading, and parallax.
 
@@ -387,33 +387,33 @@ Deliberately excluded: glitch effects, matrix rain, typing effects on every head
 
 ## 10. How the design maps to the grading
 
-| Criterion | Weight | How this design earns it |
-|---|---|---|
-| Findings screen | 20% | URL-synced combined filters, the prompt query language, chip counts, sort on every column, keyboard triage, bulk actions, saved views, CSV |
-| UX, visual craft, consistency | 20% | One rule for colour, one rule for type, one vernacular across all seven screens |
-| Code quality, structure, TypeScript | 20% | See section 11 |
-| Completeness and states | 15% | Every list has designed loading, empty and error states in the log voice |
-| Accessibility | 10% | Tags not colour, AA contrast, visible focus, landmarks, full keyboard |
-| State and mock API | 10% | TanStack Query plus MSW with latency and a failing endpoint, optimistic updates with rollback |
-| README, commits, demo | 5% | Small commits per feature, README explains each choice |
+| Criterion                           | Weight | How this design earns it                                                                                                                   |
+| ----------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Findings screen                     | 20%    | URL-synced combined filters, the prompt query language, chip counts, sort on every column, keyboard triage, bulk actions, saved views, CSV |
+| UX, visual craft, consistency       | 20%    | One rule for colour, one rule for type, one vernacular across all seven screens                                                            |
+| Code quality, structure, TypeScript | 20%    | See section 11                                                                                                                             |
+| Completeness and states             | 15%    | Every list has designed loading, empty and error states in the log voice                                                                   |
+| Accessibility                       | 10%    | Tags not colour, AA contrast, visible focus, landmarks, full keyboard                                                                      |
+| State and mock API                  | 10%    | TanStack Query plus MSW with latency and a failing endpoint, optimistic updates with rollback                                              |
+| README, commits, demo               | 5%     | Small commits per feature, README explains each choice                                                                                     |
 
 ## 11. Engineering implications
 
-| Concern | Decision | Why |
-|---|---|---|
-| Tokens | CSS variables in `src/styles/tokens.css`, mapped in `tailwind.config.ts` | One source of truth. The theme toggle flips `data-theme` on `<html>`, and charts read the same variables. |
-| Server state | TanStack Query | Built-in loading, error and retry, cache invalidation and optimistic updates match the brief exactly |
-| Client state | Zustand with `persist` | Token, theme, CRT mode, finding status overrides, saved views, prompt history |
-| Mock API | MSW, 300–800ms random latency, `/api/reports` fails 1 in 3 | A real network layer in the browser, swappable for the real backend later |
-| Query language | A pure `parseQuery(string) → FindingsQuery` and `serializeQuery(FindingsQuery) → string`, round-trip tested | Keeps the signature feature correct and unit-testable |
-| Findings pipeline | A pure `applyQuery(findings, query)`, memoised with `useMemo` | Filter, sort and paginate in one tested function |
-| Table | TanStack Table, headless | Sorting and pagination logic without imposing visuals |
-| Primitives | Radix: Dialog, DropdownMenu, Switch, Tooltip, Toast, Popover | Permitted by the brief, and accessible by default |
-| Charts | Hand-rolled SVG for the two dashboard charts | Small, matches the mark specs exactly, and themes through tokens |
-| Forms | React Hook Form + Zod | Typed schemas with inline errors |
-| Tests | Vitest for the parser, serializer and `applyQuery` | Covers the logic the grade depends on most |
-| Lint | ESLint + Prettier + `tsc --noEmit` in CI | Required by the brief |
-| Structure | `src/features/{auth,dashboard,targets,scans,findings,reports,settings,prompt}`, `src/components/ui`, `src/mocks`, `src/lib` | Feature folders keep ownership clear |
+| Concern           | Decision                                                                                                                    | Why                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Tokens            | CSS variables in `src/styles/tokens.css`, mapped in `tailwind.config.ts`                                                    | One source of truth. The theme toggle flips `data-theme` on `<html>`, and charts read the same variables. |
+| Server state      | TanStack Query                                                                                                              | Built-in loading, error and retry, cache invalidation and optimistic updates match the brief exactly      |
+| Client state      | Zustand with `persist`                                                                                                      | Token, theme, CRT mode, finding status overrides, saved views, prompt history                             |
+| Mock API          | MSW, 300–800ms random latency, `/api/reports` fails 1 in 3                                                                  | A real network layer in the browser, swappable for the real backend later                                 |
+| Query language    | A pure `parseQuery(string) → FindingsQuery` and `serializeQuery(FindingsQuery) → string`, round-trip tested                 | Keeps the signature feature correct and unit-testable                                                     |
+| Findings pipeline | A pure `applyQuery(findings, query)`, memoised with `useMemo`                                                               | Filter, sort and paginate in one tested function                                                          |
+| Table             | TanStack Table, headless                                                                                                    | Sorting and pagination logic without imposing visuals                                                     |
+| Primitives        | Radix: Dialog, DropdownMenu, Switch, Tooltip, Toast, Popover                                                                | Permitted by the brief, and accessible by default                                                         |
+| Charts            | Hand-rolled SVG for the two dashboard charts                                                                                | Small, matches the mark specs exactly, and themes through tokens                                          |
+| Forms             | React Hook Form + Zod                                                                                                       | Typed schemas with inline errors                                                                          |
+| Tests             | Vitest for the parser, serializer and `applyQuery`                                                                          | Covers the logic the grade depends on most                                                                |
+| Lint              | ESLint + Prettier + `tsc --noEmit` in CI                                                                                    | Required by the brief                                                                                     |
+| Structure         | `src/features/{auth,dashboard,targets,scans,findings,reports,settings,prompt}`, `src/components/ui`, `src/mocks`, `src/lib` | Feature folders keep ownership clear                                                                      |
 
 ### Build order
 
@@ -433,12 +433,12 @@ The order follows the brief's weighting.
 
 ## 12. Decisions needed
 
-| | Decision | Recommended | Alternatives |
-|---|---|---|---|
-| A | Approve the red-team ops-terminal direction | Yes | — |
-| B | Product name | REDCELL | Breachpoint, Nightwatch, Payload |
-| C | Signature feature | The prompt with a typed filter language | Chips only, no prompt |
-| D | Default theme | Ops (dark), with Dossier (light) as a designed sibling | Follow the system setting |
-| E | Findings interaction | Drawer plus a full page at the same URL | Full page only |
-| F | Display face | Martian Mono | Chakra Petch, or JetBrains Mono everywhere |
-| G | CRT mode easter egg | Include, off by default | Leave out |
+|     | Decision                                    | Recommended                                            | Alternatives                               |
+| --- | ------------------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| A   | Approve the red-team ops-terminal direction | Yes                                                    | —                                          |
+| B   | Product name                                | REDCELL                                                | Breachpoint, Nightwatch, Payload           |
+| C   | Signature feature                           | The prompt with a typed filter language                | Chips only, no prompt                      |
+| D   | Default theme                               | Ops (dark), with Dossier (light) as a designed sibling | Follow the system setting                  |
+| E   | Findings interaction                        | Drawer plus a full page at the same URL                | Full page only                             |
+| F   | Display face                                | Martian Mono                                           | Chakra Petch, or JetBrains Mono everywhere |
+| G   | CRT mode easter egg                         | Include, off by default                                | Leave out                                  |
