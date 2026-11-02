@@ -1,9 +1,10 @@
+import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { memo, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { SeverityTag, StatusMark } from '@/components/ui/Tags'
+import { SeverityBadge, StatusBadge } from '@/components/ui/Badges'
 import { cn } from '@/lib/cn'
+import { formatRelative, formatUtc } from '@/lib/format'
 import { categoryCode, categoryName } from '@/lib/labels'
-import { formatUtcShort } from '@/lib/format'
 import type { Finding } from '@/types/domain'
 import type { SortKey, SortSpec } from './query'
 
@@ -14,13 +15,12 @@ interface Column {
 }
 
 const COLUMNS: Column[] = [
-  { key: 'severity', label: 'Severity', className: 'w-[92px]' },
-  { key: 'title', label: 'Title' },
-  { key: 'category', label: 'Category', className: 'w-[170px]' },
-  { key: 'cwe', label: 'CWE', className: 'w-[92px]' },
-  { key: 'target', label: 'Target', className: 'w-[130px]' },
-  { key: 'status', label: 'Status', className: 'w-[132px]' },
-  { key: 'date', label: 'Found (UTC)', className: 'w-[108px]' },
+  { key: 'severity', label: 'Severity', className: 'w-[124px]' },
+  { key: 'title', label: 'Issue' },
+  { key: 'category', label: 'Category', className: 'w-[200px]' },
+  { key: 'target', label: 'Website', className: 'w-[150px]' },
+  { key: 'status', label: 'Status', className: 'w-[148px]' },
+  { key: 'date', label: 'Found', className: 'w-[104px]' },
 ]
 
 interface FindingsTableProps {
@@ -44,9 +44,13 @@ function ariaSort(key: SortKey, sort: SortSpec[]): 'ascending' | 'descending' | 
   return spec.dir === 'asc' ? 'ascending' : 'descending'
 }
 
+const checkbox = 'size-4 cursor-pointer rounded accent-[var(--brand)]'
+
 /**
- * The findings grid. Memoised: it only re-renders when its rows, sort or selection change,
- * not when unrelated state (prompt text, toasts, clock) updates.
+ * The issues table. Memoised: it only re-renders when its rows, sort or selection change,
+ * not when unrelated state (search typing, toasts) updates.
+ * CWE (a brief column) sits under the category as meta, with its own sort button in that header,
+ * so beginners see the friendly name first and every brief column stays sortable.
  */
 export const FindingsTable = memo(function FindingsTable({
   rows,
@@ -64,16 +68,47 @@ export const FindingsTable = memo(function FindingsTable({
   const allOnPage = rows.length > 0 && rows.every((r) => selected.has(r.id))
   const someOnPage = rows.some((r) => selected.has(r.id))
 
+  function header(col: Column) {
+    const state = ariaSort(col.key, sort)
+    const index = sort.findIndex((s) => s.key === col.key)
+    const Arrow = state === 'ascending' ? ArrowUp : state === 'descending' ? ArrowDown : ChevronsUpDown
+    return (
+      <button
+        type="button"
+        onClick={(e: MouseEvent) => onSort(col.key, e.shiftKey)}
+        className={cn(
+          'group/sort -mx-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[12.5px] font-medium hover:bg-surface-2 hover:text-ink',
+          state !== 'none' ? 'text-ink' : 'text-ink-3',
+        )}
+      >
+        {col.label}
+        <Arrow
+          aria-hidden
+          className={cn(
+            'size-3.5',
+            state === 'none' ? 'opacity-0 group-hover/sort:opacity-60' : 'text-brand-text',
+          )}
+        />
+        {sort.length > 1 && index >= 0 && (
+          <span aria-hidden className="text-[10px] text-ink-3">
+            {index + 1}
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  const cweState = ariaSort('cwe', sort)
+
   return (
     <div className="hidden overflow-x-auto md:block">
       <table className="w-full min-w-[920px] table-fixed border-collapse text-left">
         <caption className="sr-only">
-          Findings. Column headers sort the table; hold Shift to add a secondary sort. Press j and k to move,
-          Enter to open.
+          Issues. Select a column header to sort; hold Shift to add a second sort. Select a row to open it.
         </caption>
-        <thead>
-          <tr className="border-b border-wire-2">
-            <th scope="col" className="w-10 px-3 py-2.5">
+        <thead className="sticky top-0 z-10 bg-surface">
+          <tr className="border-y border-line bg-surface-2/60">
+            <th scope="col" className="w-12 py-2.5 pr-2 pl-5">
               <input
                 type="checkbox"
                 aria-label={allOnPage ? 'Deselect all on this page' : 'Select all on this page'}
@@ -82,35 +117,37 @@ export const FindingsTable = memo(function FindingsTable({
                   if (el) el.indeterminate = someOnPage && !allOnPage
                 }}
                 onChange={(e) => onToggleAll(e.target.checked)}
-                className="size-3.5 cursor-pointer accent-signal"
+                className={checkbox}
               />
             </th>
-            {COLUMNS.map((col) => {
-              const state = ariaSort(col.key, sort)
-              const index = sort.findIndex((s) => s.key === col.key)
-              return (
-                <th key={col.key} scope="col" aria-sort={state} className={cn('px-3 py-2.5', col.className)}>
-                  <button
-                    type="button"
-                    onClick={(e: MouseEvent) => onSort(col.key, e.shiftKey)}
-                    className={cn(
-                      'label inline-flex items-center gap-1 hover:text-bone',
-                      state !== 'none' && 'text-bone',
-                    )}
-                  >
-                    {col.label}
-                    <span aria-hidden className="w-3 text-live">
-                      {state === 'ascending' ? '↑' : state === 'descending' ? '↓' : ''}
-                    </span>
-                    {sort.length > 1 && index >= 0 && (
-                      <span aria-hidden className="text-[9px] text-smoke">
-                        {index + 1}
-                      </span>
-                    )}
-                  </button>
-                </th>
-              )
-            })}
+            {COLUMNS.map((col) => (
+              <th
+                key={col.key}
+                scope="col"
+                aria-sort={ariaSort(col.key, sort)}
+                className={cn('px-3 py-2.5', col.className)}
+              >
+                {col.key === 'category' ? (
+                  <span className="inline-flex items-center gap-3">
+                    {header(col)}
+                    <button
+                      type="button"
+                      onClick={(e: MouseEvent) => onSort('cwe', e.shiftKey)}
+                      aria-label={`Sort by CWE${cweState === 'none' ? '' : `, currently ${cweState}`}`}
+                      className={cn(
+                        'rounded-md px-1.5 py-0.5 text-[12px] font-medium hover:bg-surface-2 hover:text-ink',
+                        cweState !== 'none' ? 'text-brand-text' : 'text-ink-3',
+                      )}
+                    >
+                      CWE
+                      {cweState === 'ascending' ? ' ↑' : cweState === 'descending' ? ' ↓' : ''}
+                    </button>
+                  </span>
+                ) : (
+                  header(col)
+                )}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -125,24 +162,24 @@ export const FindingsTable = memo(function FindingsTable({
                 onMouseEnter={() => onActivate(f.id)}
                 aria-selected={isSelected}
                 className={cn(
-                  'group cursor-pointer border-b border-dashed border-wire transition-colors hover:bg-panel-2',
-                  isSelected && 'bg-signal/[0.06]',
-                  isActive && 'bg-panel-2 shadow-[inset_2px_0_0_var(--live)]',
+                  'group h-[60px] cursor-pointer border-b border-line transition-colors last:border-b-0 hover:bg-surface-2/70',
+                  isSelected && 'bg-brand-soft/60 hover:bg-brand-soft',
+                  isActive && 'shadow-[inset_3px_0_0_var(--brand)]',
                 )}
               >
-                <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                <td className="py-3 pr-2 pl-5" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     aria-label={`Select ${f.title}`}
                     checked={isSelected}
                     onChange={() => onToggle(f.id)}
-                    className="size-3.5 cursor-pointer accent-signal"
+                    className={checkbox}
                   />
                 </td>
-                <td className="px-3 py-2.5">
-                  <SeverityTag severity={f.severity} />
+                <td className="px-3 py-3">
+                  <SeverityBadge severity={f.severity} />
                 </td>
-                <td className="min-w-0 px-3 py-2.5">
+                <td className="min-w-0 px-3 py-3">
                   <Link
                     to={{ pathname: `/findings/${f.id}`, search }}
                     onClick={(e) => {
@@ -150,27 +187,26 @@ export const FindingsTable = memo(function FindingsTable({
                       e.stopPropagation()
                       onOpen(f.id)
                     }}
-                    className="block truncate text-[13.5px] font-medium text-bone group-hover:underline group-hover:decoration-wire-2 group-hover:underline-offset-4"
+                    className="block truncate text-[14px] font-medium text-ink group-hover:text-brand-text"
                   >
                     {f.title}
                   </Link>
-                  <span className="mt-0.5 block truncate font-mono text-[11.5px] text-smoke">
-                    {f.id} · {f.location}
+                  <span className="mt-0.5 block truncate font-mono text-[12px] text-ink-3">{f.location}</span>
+                </td>
+                <td className="min-w-0 px-3 py-3" title={f.category}>
+                  <span className="block truncate text-[14px] text-ink">{categoryName(f.category)}</span>
+                  <span className="mt-0.5 block font-mono text-[12px] text-ink-3">
+                    {categoryCode(f.category)} · {f.cwe}
                   </span>
                 </td>
-                <td className="truncate px-3 py-2.5 text-[12.5px] text-ash" title={f.category}>
-                  <span className="font-mono text-bone">{categoryCode(f.category)}</span>{' '}
-                  {categoryName(f.category)}
-                </td>
-                <td className="px-3 py-2.5 font-mono text-[12.5px] text-bone">{f.cwe}</td>
-                <td className="truncate px-3 py-2.5 text-[12.5px] text-ash">
+                <td className="truncate px-3 py-3 text-[14px] text-ink-2">
                   {targetNames.get(f.targetId) ?? f.targetId}
                 </td>
-                <td className="px-3 py-2.5">
-                  <StatusMark status={f.status} />
+                <td className="px-3 py-3">
+                  <StatusBadge status={f.status} />
                 </td>
-                <td className="tabular px-3 py-2.5 font-mono text-[12px] text-ash">
-                  {formatUtcShort(f.discoveredAt)}
+                <td className="tabular px-3 py-3 text-[13px] text-ink-2" title={formatUtc(f.discoveredAt)}>
+                  {formatRelative(f.discoveredAt)}
                 </td>
               </tr>
             )
@@ -190,26 +226,26 @@ export const FindingsCards = memo(function FindingsCards({
   onOpen,
 }: Pick<FindingsTableProps, 'rows' | 'targetNames' | 'selected' | 'onToggle' | 'onOpen'>) {
   return (
-    <ul className="divide-y divide-wire md:hidden">
+    <ul className="divide-y divide-line border-t border-line md:hidden">
       {rows.map((f) => (
-        <li key={f.id} className="flex gap-3 px-4 py-3">
+        <li key={f.id} className={cn('flex gap-3 px-4 py-4', selected.has(f.id) && 'bg-brand-soft/60')}>
           <input
             type="checkbox"
             aria-label={`Select ${f.title}`}
             checked={selected.has(f.id)}
             onChange={() => onToggle(f.id)}
-            className="mt-1 size-4 accent-signal"
+            className={cn(checkbox, 'mt-1')}
           />
           <button type="button" onClick={() => onOpen(f.id)} className="min-w-0 flex-1 text-left">
-            <div className="flex items-center justify-between gap-2">
-              <SeverityTag severity={f.severity} />
-              <StatusMark status={f.status} />
+            <div className="flex flex-wrap items-center gap-2">
+              <SeverityBadge severity={f.severity} />
+              <StatusBadge status={f.status} />
             </div>
-            <p className="mt-1.5 text-[14px] font-medium text-bone">{f.title}</p>
-            <p className="mt-1 truncate font-mono text-[11.5px] text-smoke">{f.location}</p>
-            <p className="mt-1 font-mono text-[11.5px] text-ash">
-              {f.cwe} · {categoryCode(f.category)} · {targetNames.get(f.targetId) ?? f.targetId} ·{' '}
-              {formatUtcShort(f.discoveredAt)}
+            <p className="mt-2 text-[15px] font-medium text-ink">{f.title}</p>
+            <p className="mt-0.5 truncate font-mono text-[12px] text-ink-3">{f.location}</p>
+            <p className="mt-1.5 text-[13px] text-ink-2">
+              {categoryName(f.category)} · {targetNames.get(f.targetId) ?? f.targetId} ·{' '}
+              {formatRelative(f.discoveredAt)}
             </p>
           </button>
         </li>

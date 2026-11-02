@@ -1,24 +1,33 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react'
+import { CircleCheck, CircleDot, CircleSlash, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { useEffect, useId, useRef, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/cn'
-import { STATUS_LABEL } from '@/lib/labels'
+import { STATUS_HELP, STATUS_LABEL } from '@/lib/labels'
 import { FINDING_STATUSES, type FindingStatus } from '@/types/domain'
 
-const HINT: Record<FindingStatus, string> = {
-  open: 'Reported by the scanner, not yet reviewed',
-  confirmed: 'Reproduced by an analyst',
-  resolved: 'Fixed and verified',
-  false_positive: 'Not a real issue',
+const ICON: Record<FindingStatus, LucideIcon> = {
+  open: CircleDot,
+  confirmed: TriangleAlert,
+  resolved: CircleCheck,
+  false_positive: CircleSlash,
+}
+
+const SELECTED: Record<FindingStatus, string> = {
+  open: 'bg-surface text-brand-text shadow-sm ring-1 ring-line',
+  confirmed: 'bg-surface text-sev-high shadow-sm ring-1 ring-line',
+  resolved: 'bg-surface text-success shadow-sm ring-1 ring-line',
+  false_positive: 'bg-surface text-ink shadow-sm ring-1 ring-line',
 }
 
 /**
- * The triage state machine, drawn as a path: open -> confirmed -> resolved | false positive.
- * Implemented as an ARIA radio group: arrow keys move, and the number keys 1 to 4 jump straight to a state.
+ * The triage state (New, Confirmed, Fixed, Not an issue) as a segmented control.
+ * Implemented as an ARIA radio group: arrow keys move; with `hotkeys`, number keys 1 to 4 jump to a state.
+ * The helper text under it explains the selected state in plain words.
  */
 export function StatusStepper({
   status,
   onChange,
   disabled,
-  hotkeys = true,
+  hotkeys = false,
 }: {
   status: FindingStatus
   onChange: (status: FindingStatus) => void
@@ -26,7 +35,7 @@ export function StatusStepper({
   hotkeys?: boolean
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([])
-  const currentIndex = FINDING_STATUSES.indexOf(status)
+  const helpId = useId()
 
   useEffect(() => {
     if (!hotkeys) return
@@ -56,64 +65,44 @@ export function StatusStepper({
     if (s) onChange(s)
   }
 
-  const step = (s: FindingStatus, i: number) => {
-    const checked = s === status
-    const passed = (s === 'open' && currentIndex > 0) || (s === 'confirmed' && currentIndex > 1)
-    return (
-      <button
-        key={s}
-        ref={(el) => {
-          refs.current[i] = el
-        }}
-        type="button"
-        role="radio"
-        aria-checked={checked}
-        tabIndex={checked ? 0 : -1}
-        disabled={disabled}
-        title={HINT[s]}
-        onClick={() => !checked && onChange(s)}
-        onKeyDown={(e) => onKeyDown(e, i)}
-        className={cn(
-          'flex h-8 items-center gap-2 border px-2.5 font-mono text-[12px] transition-colors duration-150 disabled:cursor-wait',
-          checked
-            ? s === 'resolved'
-              ? 'border-clear bg-clear/15 text-clear'
-              : s === 'false_positive'
-                ? 'border-ash bg-panel-2 text-bone'
-                : 'border-signal bg-signal/15 text-bone'
-            : passed
-              ? 'border-wire-2 text-bone hover:bg-panel-2'
-              : 'border-wire text-ash hover:border-wire-2 hover:text-bone',
-        )}
-      >
-        <span
-          aria-hidden
-          className={cn(
-            'inline-flex size-4 items-center justify-center rounded-full border text-[9px]',
-            checked ? 'border-current bg-current' : passed ? 'border-bone' : 'border-smoke',
-          )}
-        >
-          {checked ? <span className="text-void">●</span> : passed ? '✓' : i + 1}
-        </span>
-        {STATUS_LABEL[s]}
-      </button>
-    )
-  }
-
   return (
     <div>
-      <div role="radiogroup" aria-label="Finding status" className="flex flex-wrap items-center gap-y-2">
-        {step('open', 0)}
-        <span aria-hidden className="h-px w-4 bg-wire-2" />
-        {step('confirmed', 1)}
-        <span aria-hidden className="h-px w-4 bg-wire-2" />
-        <span className="flex flex-col gap-1">
-          {step('resolved', 2)}
-          {step('false_positive', 3)}
-        </span>
+      <div
+        role="radiogroup"
+        aria-label="Issue status"
+        aria-describedby={helpId}
+        className="grid grid-cols-2 gap-1 rounded-lg bg-surface-2 p-1 sm:grid-cols-4"
+      >
+        {FINDING_STATUSES.map((s, i) => {
+          const checked = s === status
+          const Icon = ICON[s]
+          return (
+            <button
+              key={s}
+              ref={(el) => {
+                refs.current[i] = el
+              }}
+              type="button"
+              role="radio"
+              aria-checked={checked}
+              tabIndex={checked ? 0 : -1}
+              disabled={disabled}
+              onClick={() => !checked && onChange(s)}
+              onKeyDown={(e) => onKeyDown(e, i)}
+              className={cn(
+                'flex h-9 items-center justify-center gap-2 rounded-md px-3 text-[14px] font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 disabled:cursor-wait',
+                checked ? SELECTED[s] : 'text-ink-2 hover:text-ink',
+              )}
+            >
+              <Icon aria-hidden className="size-4" />
+              {STATUS_LABEL[s]}
+            </button>
+          )
+        })}
       </div>
-      <p className="mt-2 font-mono text-[11px] text-smoke">
-        {HINT[status]}. {hotkeys ? 'Keys 1–4 set the status.' : ''}
+      <p id={helpId} className="mt-2 text-[13px] text-ink-2">
+        {STATUS_HELP[status]}
+        {hotkeys && <span className="hidden text-ink-3 md:inline"> Tip: press 1–4 to change it.</span>}
       </p>
     </div>
   )

@@ -1,27 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useFindings, useSetFindingStatus, useTargets } from '@/api/queries'
+import { Plus, Radar, SearchX } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { PageHeader, Panel } from '@/components/ui/PageHeader'
+import { Page, PageHeader } from '@/components/ui/PageHeader'
 import { Pagination } from '@/components/ui/Pagination'
 import { EmptyState, ErrorState, SkeletonRows } from '@/components/ui/States'
 import { findingsToCsv } from '@/lib/csv'
 import { downloadBlob } from '@/lib/download'
 import { isOpenStatus } from '@/lib/labels'
+import { STATUS_LABEL } from '@/lib/labels'
 import { toast } from '@/stores/toast'
+import { useUiStore } from '@/stores/ui'
 import type { FindingStatus } from '@/types/domain'
 import { applyQuery, facetCounts } from './applyQuery'
 import { BulkBar } from './BulkBar'
-import { FilterBar } from './FilterBar'
+import { FilterBar, QuickViews } from './FilterBar'
 import { FindingsCards, FindingsTable } from './FindingsTable'
-import {
-  EMPTY_QUERY,
-  hasFilters,
-  PAGE_SIZES,
-  serializePrompt,
-  type FindingsQuery,
-  type SortKey,
-} from './query'
+import { EMPTY_QUERY, PAGE_SIZES, type FindingsQuery, type SortKey } from './query'
 import { useFindingsQuery } from './useFindingsQuery'
 
 function anyDialogOpen() {
@@ -44,6 +40,7 @@ export function FindingsPage() {
   const location = useLocation()
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
   const [activeId, setActiveId] = useState<string | null>(null)
+  const openNewScan = useUiStore((s) => s.openNewScan)
 
   const findings = useMemo(() => findingsQuery.data ?? [], [findingsQuery.data])
   const targetNames = useMemo(() => new Map(targets.map((t) => [t.id, t.name])), [targets])
@@ -53,6 +50,10 @@ export function FindingsPage() {
   const result = useMemo(() => applyQuery(findings, query, ctx), [findings, query, ctx])
   const counts = useMemo(() => facetCounts(findings, query, ctx), [findings, query, ctx])
   const openCount = useMemo(() => findings.filter((f) => isOpenStatus(f.status)).length, [findings])
+  const siteCount = useMemo(
+    () => new Set(findings.filter((f) => isOpenStatus(f.status)).map((f) => f.targetId)).size,
+    [findings],
+  )
 
   const open = useCallback(
     (id: string) =>
@@ -107,10 +108,10 @@ export function FindingsPage() {
   function exportCsv() {
     downloadBlob(
       findingsToCsv(result.matched, targetNames),
-      `redcell-findings-${new Date().toISOString().slice(0, 10)}.csv`,
+      `clearsite-issues-${new Date().toISOString().slice(0, 10)}.csv`,
       'text/csv',
     )
-    toast.success('CSV exported', `${result.matched.length} findings from the current view`)
+    toast.success('CSV downloaded', `${result.matched.length} issues from the current view`)
   }
 
   function bulkSet(status: FindingStatus) {
@@ -120,8 +121,8 @@ export function FindingsPage() {
       {
         onSuccess: () => {
           toast.success(
-            `${ids.length} finding${ids.length === 1 ? '' : 's'} updated`,
-            `Marked as ${status.replace('_', ' ')}`,
+            `${ids.length} issue${ids.length === 1 ? '' : 's'} updated`,
+            `Marked as “${STATUS_LABEL[status]}”`,
           )
           setSelected(new Set())
         },
@@ -155,21 +156,21 @@ export function FindingsPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [result.rows, activeId, open, onToggle])
 
-  const filtersOn = hasFilters(query)
+  const clearFilters = () => update({ ...EMPTY_QUERY, sort: query.sort, pageSize: query.pageSize })
 
   let body
   if (findingsQuery.isPending) {
     body = (
       <SkeletonRows
-        label="fetching /api/findings"
-        columns={['w-4', 'w-12', 'w-2/5', 'w-28', 'w-14', 'w-24', 'w-20', 'w-20']}
+        label="Loading issues"
+        columns={['w-4', 'w-20', 'w-2/5', 'w-32', 'w-24', 'w-20', 'w-16']}
       />
     )
   } else if (findingsQuery.isError) {
     body = (
       <ErrorState
         error={findingsQuery.error}
-        resource="/api/findings"
+        resource="your issues"
         onRetry={() => void findingsQuery.refetch()}
         retrying={findingsQuery.isFetching}
       />
@@ -177,11 +178,12 @@ export function FindingsPage() {
   } else if (findings.length === 0) {
     body = (
       <EmptyState
-        title="0 findings on record"
-        detail="Findings appear here when a scan completes. Add a target and launch a scan to start."
+        icon={<Radar />}
+        title="No issues yet"
+        detail="Issues appear here when a scan finishes. Start a scan on one of your websites to find them."
         action={
-          <Button variant="primary" onClick={() => navigate('/scans')}>
-            Go to scans
+          <Button variant="primary" icon={<Plus aria-hidden />} onClick={() => openNewScan()}>
+            Start a scan
           </Button>
         }
       />
@@ -189,13 +191,10 @@ export function FindingsPage() {
   } else if (result.total === 0) {
     body = (
       <EmptyState
-        title={`0 findings match ${serializePrompt({ ...query, page: 1 }) || 'this view'}`}
-        detail="Widen the search or remove a filter."
-        action={
-          <Button onClick={() => update({ ...EMPTY_QUERY, sort: query.sort, pageSize: query.pageSize })}>
-            Clear filters
-          </Button>
-        }
+        icon={<SearchX />}
+        title="No issues match these filters"
+        detail="Try a different search, or remove a filter to see more."
+        action={<Button onClick={clearFilters}>Clear filters</Button>}
       />
     )
   } else {
@@ -227,7 +226,7 @@ export function FindingsPage() {
           total={result.total}
           pageSize={query.pageSize}
           pageSizes={PAGE_SIZES}
-          noun="findings"
+          noun="issues"
           onPage={(page) => update({ page })}
           onPageSize={(pageSize) => update({ pageSize })}
         />
@@ -236,21 +235,26 @@ export function FindingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-6 md:px-6">
+    <Page>
       <PageHeader
-        title="Findings"
-        meta={
+        title="Issues"
+        description={
           findingsQuery.data
-            ? `${findings.length} total · ${openCount} need action · ${filtersOn ? `${result.total} in this view` : 'no filters'}`
+            ? openCount === 0
+              ? 'Nothing needs your attention right now.'
+              : `${openCount} open issue${openCount === 1 ? '' : 's'} across ${siteCount} website${siteCount === 1 ? '' : 's'}. Start with the most severe.`
             : findingsQuery.isError
-              ? 'could not load findings'
-              : 'loading findings'
+              ? 'Problems found on your websites, and how to fix them.'
+              : 'Loading your issues…'
         }
       />
       <p className="sr-only" aria-live="polite">
-        {findingsQuery.data ? `${result.total} findings match.` : ''}
+        {findingsQuery.data ? `${result.total} issues match.` : ''}
       </p>
-      <Panel label="findings">
+      <section aria-label="Issues" className="card overflow-hidden">
+        {findingsQuery.data && findings.length > 0 && (
+          <QuickViews query={query} counts={counts} onChange={onChange} />
+        )}
         <FilterBar
           query={query}
           counts={counts}
@@ -260,21 +264,18 @@ export function FindingsPage() {
           onExport={exportCsv}
           exportCount={result.total}
         />
-        {selected.size > 0 && (
-          <BulkBar
-            count={selected.size}
-            matchedCount={result.total}
-            onSelectAllMatching={() => setSelected(new Set(result.matched.map((f) => f.id)))}
-            onClear={() => setSelected(new Set())}
-            onSetStatus={bulkSet}
-            pending={setStatus.isPending}
-          />
-        )}
         {body}
-      </Panel>
-      <p className="hidden font-mono text-[11.5px] text-smoke md:block">
-        j / k move · enter open · x select · shift-click a header for a secondary sort · / focus the prompt
-      </p>
-    </div>
+      </section>
+      {selected.size > 0 && (
+        <BulkBar
+          count={selected.size}
+          matchedCount={result.total}
+          onSelectAllMatching={() => setSelected(new Set(result.matched.map((f) => f.id)))}
+          onClear={() => setSelected(new Set())}
+          onSetStatus={bulkSet}
+          pending={setStatus.isPending}
+        />
+      )}
+    </Page>
   )
 }

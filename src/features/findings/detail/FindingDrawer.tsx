@@ -1,17 +1,18 @@
 import * as RadixDialog from '@radix-ui/react-dialog'
+import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { Link, useLocation, useNavigate, useParams, type Location } from 'react-router-dom'
 import { useFinding, useFindings, useTargets } from '@/api/queries'
+import { IconButton } from '@/components/ui/Button'
 import { ErrorState } from '@/components/ui/States'
-import { Kbd } from '@/components/ui/States'
 import { applyQuery } from '../applyQuery'
 import { fromSearchParams } from '../query'
 import { FindingDetail } from './FindingDetail'
 import { DetailSkeleton } from './FindingDetailPage'
 
 /**
- * Inspector drawer over the findings table (the "modal route" pattern): the URL is /findings/:id,
- * the table stays rendered underneath, and [ / ] step through the rows of the current view.
+ * Side panel over the issues table (the "modal route" pattern): the URL is /findings/:id, the table
+ * stays rendered underneath, and Prev / Next step through the rows of the current filtered view.
  */
 export function FindingDrawer() {
   const { id = '' } = useParams()
@@ -40,6 +41,7 @@ export function FindingDrawer() {
       { replace: true, state: { background } },
     )
 
+  // [ and ] step through issues: a hidden extra for keyboard users; the buttons do the same.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement | null
@@ -54,61 +56,53 @@ export function FindingDrawer() {
   return (
     <RadixDialog.Root open onOpenChange={(open) => !open && close()}>
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className="fixed inset-0 z-40 animate-fade bg-void/60" />
+        <RadixDialog.Overlay className="fixed inset-0 z-40 animate-fade bg-[var(--overlay)]" />
         <RadixDialog.Content
           aria-describedby={undefined}
-          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[760px] animate-drawer flex-col border-l border-wire-2 bg-panel shadow-pop focus:outline-none"
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[560px] animate-slide flex-col border-l border-line bg-bg shadow-lg focus:outline-none"
         >
-          <div className="flex h-11 shrink-0 items-center gap-2 border-b border-wire px-4">
-            <RadixDialog.Title className="font-mono text-[12px] text-ash">
-              ~/findings/<span className="text-bone">{id}</span>
+          <div className="flex h-14 shrink-0 items-center gap-1 border-b border-line bg-surface px-3">
+            <RadixDialog.Title className="pl-2 text-[14px] font-medium text-ink">
+              Issue details
             </RadixDialog.Title>
-            <span className="ml-auto flex items-center gap-1 font-mono text-[11px] text-smoke">
-              {index >= 0 && (
-                <span className="tabular mr-2">
-                  {index + 1}/{ordered.length}
-                </span>
-              )}
-              <button
-                type="button"
+            {index >= 0 && (
+              <span className="tabular ml-2 text-[13px] text-ink-3">
+                {index + 1} of {ordered.length}
+              </span>
+            )}
+            <span className="ml-auto flex items-center gap-0.5">
+              <IconButton
+                label="Previous issue"
+                size="sm"
                 disabled={!prev}
                 onClick={() => prev && go(prev.id)}
-                className="rounded-xs px-1.5 py-0.5 text-ash hover:bg-panel-2 hover:text-bone disabled:opacity-30"
-                aria-label="Previous finding"
               >
-                <Kbd>[</Kbd> prev
-              </button>
-              <button
-                type="button"
-                disabled={!next}
-                onClick={() => next && go(next.id)}
-                className="rounded-xs px-1.5 py-0.5 text-ash hover:bg-panel-2 hover:text-bone disabled:opacity-30"
-                aria-label="Next finding"
-              >
-                next <Kbd>]</Kbd>
-              </button>
+                <ChevronLeft aria-hidden />
+              </IconButton>
+              <IconButton label="Next issue" size="sm" disabled={!next} onClick={() => next && go(next.id)}>
+                <ChevronRight aria-hidden />
+              </IconButton>
               <Link
                 to={`/findings/${id}`}
-                className="ml-2 rounded-xs px-1.5 py-0.5 text-ash hover:bg-panel-2 hover:text-bone"
-                title="Open as a full page"
+                className="ml-1 inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-ink-2 hover:bg-surface-2 hover:text-ink"
               >
-                full page
+                <Maximize2 aria-hidden className="size-3.5" />
+                Open full page
               </Link>
-              <RadixDialog.Close
-                className="ml-1 rounded-xs px-1.5 py-0.5 text-ash hover:bg-panel-2 hover:text-bone"
-                aria-label="Close"
-              >
-                esc
+              <RadixDialog.Close asChild>
+                <IconButton label="Close" size="sm">
+                  <X aria-hidden />
+                </IconButton>
               </RadixDialog.Close>
             </span>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-6">
             {finding.data ? (
               <FindingDetail finding={finding.data} target={target} variant="drawer" />
             ) : finding.isError ? (
               <ErrorState
                 error={finding.error}
-                resource={`/api/findings/${id}`}
+                resource="this issue"
                 onRetry={() => void finding.refetch()}
               />
             ) : (
