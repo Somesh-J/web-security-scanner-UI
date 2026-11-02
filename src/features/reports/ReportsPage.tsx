@@ -1,97 +1,176 @@
+import { CircleCheck, Download, FileText, Plus, Radar } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { errorMessage } from '@/api/client'
-import { useCreateReport, useFindings, useReports, useScans } from '@/api/queries'
+import { useCreateReport, useFindings, useReports, useScans, useTargets } from '@/api/queries'
+import { SeverityCounts } from '@/components/ui/Badges'
 import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
-import { SelectField } from '@/components/ui/Field'
-import { IconDownload, IconPlus } from '@/components/ui/Icons'
-import { PageHeader, Panel } from '@/components/ui/PageHeader'
+import { Card, Page, PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState, ErrorState, SkeletonRows } from '@/components/ui/States'
-import { SeverityStrip } from '@/components/ui/Tags'
+import { cn } from '@/lib/cn'
 import { downloadBlob } from '@/lib/download'
-import { formatUtc } from '@/lib/format'
+import { formatRelative } from '@/lib/format'
 import { toast } from '@/stores/toast'
-import type { Report } from '@/types/domain'
-import { useTargets } from '@/api/queries'
+import { useUiStore } from '@/stores/ui'
+import type { Report, Scan } from '@/types/domain'
 import { reportToPdf } from './reportPdf'
 
-function GenerateReportDialog({
+/** "Feb 18, 2026, 10:00" in the user's own locale and time zone. */
+function formatDate(iso: string | null): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function issueTotal(scan: Scan): number {
+  const c = scan.findingsCount
+  return c.critical + c.high + c.medium + c.low
+}
+
+function finishedAt(scan: Scan): string | null {
+  if (!scan.startedAt) return null
+  return new Date(new Date(scan.startedAt).getTime() + (scan.durationSec ?? 0) * 1000).toISOString()
+}
+
+function CreateReportDialog({
   open,
   onOpenChange,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { data: scans = [] } = useScans()
-  const { data: targets = [] } = useTargets()
-  const create = useCreateReport()
-  const [scanId, setScanId] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const names = new Map(targets.map((t) => [t.id, t.name]))
-  const completed = scans.filter((s) => s.status === 'completed')
-
-  function generate() {
-    if (!scanId) {
-      setError('Choose a completed scan.')
-      return
-    }
-    create.mutate(scanId, {
-      onSuccess: () => {
-        onOpenChange(false)
-        setScanId('')
-      },
-      onError: (e) => setError(errorMessage(e)),
-    })
-  }
-
   return (
     <Dialog
       open={open}
-      onOpenChange={(o) => {
-        onOpenChange(o)
-        if (!o) setError(null)
-      }}
-      eyebrow="reports/new"
-      title="Generate report"
-      description="Only completed scans can be reported on."
-      footer={
-        <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={generate} loading={create.isPending}>
-            Generate
-          </Button>
-        </>
-      }
+      onOpenChange={onOpenChange}
+      title="Create a report"
+      description="Pick a completed scan. We'll turn its results into a PDF you can share."
     >
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          generate()
-        }}
-      >
-        <SelectField
-          label="Scan"
-          value={scanId}
-          onChange={(e) => {
-            setScanId(e.target.value)
-            setError(null)
-          }}
-          placeholder={completed.length ? 'Choose a completed scan' : 'No completed scans yet'}
-          error={error ?? undefined}
-          options={completed.map((s) => {
-            const total =
-              s.findingsCount.critical + s.findingsCount.high + s.findingsCount.medium + s.findingsCount.low
-            return {
-              value: s.id,
-              label: `${s.id} · ${names.get(s.targetId) ?? s.targetId} · ${formatUtc(s.startedAt)} · ${total} findings`,
-            }
-          })}
-        />
-      </form>
+      {/* Mounted only while open, so the choice starts fresh every time. */}
+      {open && <CreateReportForm onDone={() => onOpenChange(false)} />}
     </Dialog>
+  )
+}
+
+function CreateReportForm({ onDone }: { onDone: () => void }) {
+  const { data: scans = [], isPending } = useScans()
+  const { data: targets = [] } = useTargets()
+  const openNewScan = useUiStore((s) => s.openNewScan)
+  const create = useCreateReport()
+  const [scanId, setScanId] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const names = useMemo(() => new Map(targets.map((t) => [t.id, t.name])), [targets])
+  const completed = useMemo(
+    () =>
+      scans
+        .filter((s) => s.status === 'completed')
+        .sort((a, b) => (b.startedAt ?? '').localeCompare(a.startedAt ?? '')),
+    [scans],
+  )
+
+  function submit() {
+    if (!scanId) {
+      setError('Choose a scan to report on.')
+      return
+    }
+    create.mutate(scanId, { onSuccess: onDone, onError: (e) => setError(errorMessage(e)) })
+  }
+
+  return (
+    <form
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault()
+        submit()
+      }}
+      className="flex min-h-0 flex-1 flex-col"
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
+        {isPending ? (
+          <SkeletonRows label="Loading scans" rows={3} columns={['w-1/2', 'w-1/4']} />
+        ) : completed.length === 0 ? (
+          <EmptyState
+            className="py-8"
+            icon={<Radar />}
+            title="No completed scans yet"
+            detail="Run a scan first. When it finishes, you can create a report from it here."
+            action={
+              <Button
+                variant="primary"
+                icon={<Plus aria-hidden />}
+                onClick={() => {
+                  onDone()
+                  openNewScan()
+                }}
+              >
+                New scan
+              </Button>
+            }
+          />
+        ) : (
+          <fieldset>
+            <legend className="mb-2 text-[13px] font-medium text-ink">Completed scans</legend>
+            <div className="flex flex-col gap-2">
+              {completed.map((s) => {
+                const checked = scanId === s.id
+                const total = issueTotal(s)
+                return (
+                  <label
+                    key={s.id}
+                    className={cn(
+                      'flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand',
+                      checked ? 'border-brand bg-brand-soft' : 'border-line hover:bg-surface-2',
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="scan"
+                      value={s.id}
+                      checked={checked}
+                      onChange={() => {
+                        setScanId(s.id)
+                        setError(null)
+                      }}
+                      className="size-4 accent-[var(--brand)]"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14px] font-medium text-ink">
+                        {names.get(s.targetId) ?? 'Unknown website'}
+                      </span>
+                      <span className="block text-[13px] text-ink-3">
+                        Finished {formatDate(finishedAt(s))} · Scan {s.id}
+                      </span>
+                    </span>
+                    <span className="tabular shrink-0 text-[13px] text-ink-2">
+                      {total} issue{total === 1 ? '' : 's'}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
+        )}
+        {error && (
+          <p role="alert" className="mt-3 text-[13px] text-danger">
+            {error}
+          </p>
+        )}
+      </div>
+      <footer className="flex flex-wrap justify-end gap-2 border-t border-line bg-surface-2/60 px-6 py-4">
+        <Button variant="ghost" onClick={onDone}>
+          Cancel
+        </Button>
+        <Button type="submit" variant="primary" loading={create.isPending} disabled={completed.length === 0}>
+          Create report
+        </Button>
+      </footer>
+    </form>
   )
 }
 
@@ -99,38 +178,56 @@ export function ReportsPage() {
   const reports = useReports()
   const { data: scans = [] } = useScans()
   const { data: findings = [] } = useFindings()
+  const [params, setParams] = useSearchParams()
   const [dialogOpen, setDialogOpen] = useState(false)
   const scanById = useMemo(() => new Map(scans.map((s) => [s.id, s])), [scans])
+  // ?create=1 (from the checklist or a link) opens the dialog on arrival; closing it drops the param.
+  const createRequested = params.get('create') === '1'
+
+  function setCreateOpen(open: boolean) {
+    setDialogOpen(open)
+    if (!open && createRequested) {
+      setParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.delete('create')
+          return next
+        },
+        { replace: true },
+      )
+    }
+  }
 
   function download(report: Report) {
-    const scan = scanById.get(report.scanId)
     const pdf = reportToPdf(
       report,
-      scan,
+      scanById.get(report.scanId),
       findings.filter((f) => f.scanId === report.scanId),
     )
     downloadBlob(
       pdf,
-      `${report.id}-${report.target.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`,
+      `clearsite-${report.id}-${report.target.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.pdf`,
       'application/pdf',
     )
-    toast.success(`${report.id}.pdf downloaded`, `${report.target} · ${report.findings} findings`)
+    toast.success('Report downloaded', `${report.target} · ${report.findings} issues`)
   }
+
+  const createButton = (
+    <Button variant="primary" icon={<Plus aria-hidden />} onClick={() => setCreateOpen(true)}>
+      Create report
+    </Button>
+  )
 
   let body
   if (reports.isPending)
     body = (
-      <SkeletonRows
-        label="fetching /api/reports"
-        rows={4}
-        columns={['w-16', 'w-32', 'w-20', 'w-40', 'w-24', 'w-20']}
-      />
+      <SkeletonRows label="Loading reports" rows={4} columns={['w-8', 'w-1/3', 'w-24', 'w-28', 'w-32']} />
     )
   else if (reports.isError)
     body = (
       <ErrorState
         error={reports.error}
-        resource="/api/reports"
+        resource="your reports"
         onRetry={() => void reports.refetch()}
         retrying={reports.isFetching}
       />
@@ -138,100 +235,71 @@ export function ReportsPage() {
   else if (reports.data.length === 0)
     body = (
       <EmptyState
-        title="0 reports generated"
-        detail="Generate a PDF report from any completed scan."
-        action={
-          <Button variant="primary" icon={<IconPlus />} onClick={() => setDialogOpen(true)}>
-            Generate report
-          </Button>
-        }
+        icon={<FileText />}
+        title="No reports yet"
+        detail="Create a PDF summary from any completed scan to share with your team."
+        action={createButton}
       />
     )
   else
     body = (
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[820px] border-collapse text-left">
-          <caption className="sr-only">Generated reports</caption>
-          <thead>
-            <tr className="border-b border-wire-2">
-              {['Report', 'Target', 'Scan', 'Findings', 'Created (UTC)', ''].map((h, i) => (
-                <th key={h || i} scope="col" className="label px-4 py-2.5">
-                  {h || <span className="sr-only">Download</span>}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {reports.data.map((r) => {
-              const scan = scanById.get(r.scanId)
-              return (
-                <tr key={r.id} className="border-b border-dashed border-wire hover:bg-panel-2">
-                  <td className="px-4 py-3 font-mono text-[12.5px] text-bone">
-                    {r.id}
-                    <span className="ml-2 rounded-xs border border-wire-2 px-1 text-[10px] text-ash uppercase">
-                      {r.format}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-[13px] text-bone">{r.target}</td>
-                  <td className="px-4 py-3 font-mono text-[12.5px]">
-                    <Link
-                      to={`/findings?scan=${r.scanId}`}
-                      className="text-ash hover:text-bone hover:underline"
-                    >
-                      {r.scanId}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    {scan ? (
-                      <SeverityStrip counts={scan.findingsCount} />
-                    ) : (
-                      <span className="font-mono text-[12px] text-ash">{r.findings}</span>
-                    )}
-                  </td>
-                  <td className="tabular px-4 py-3 font-mono text-[12px] text-ash">
-                    {formatUtc(r.createdAt)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm"
-                      icon={<IconDownload />}
-                      onClick={() => download(r)}
-                      aria-label={`Download ${r.id} as PDF`}
-                    >
-                      PDF
-                    </Button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      <ul aria-label="Reports" className="divide-y divide-line">
+        {reports.data.map((r) => {
+          const scan = scanById.get(r.scanId)
+          return (
+            <li
+              key={r.id}
+              className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4 transition-colors hover:bg-surface-2/60"
+            >
+              <span
+                aria-hidden
+                className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand-text"
+              >
+                <FileText className="size-5" />
+              </span>
+              <div className="min-w-0 flex-1 basis-56">
+                <p className="truncate text-[14px] font-medium text-ink">
+                  {r.target}, scan {r.scanId}
+                </p>
+                <p className="text-[13px] text-ink-3">
+                  Created <time dateTime={r.createdAt}>{formatRelative(r.createdAt)}</time> ·{' '}
+                  <Link to={`/findings?scan=${r.scanId}`} className="text-brand-text hover:underline">
+                    {r.findings} issue{r.findings === 1 ? '' : 's'}
+                  </Link>
+                </p>
+              </div>
+              <div className="flex min-w-0 flex-1 basis-40 items-center">
+                {scan ? (
+                  <SeverityCounts counts={scan.findingsCount} />
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-[13px] text-ink-3">
+                    <CircleCheck aria-hidden className="size-3.5" />
+                    PDF
+                  </span>
+                )}
+              </div>
+              <Button
+                icon={<Download aria-hidden />}
+                onClick={() => download(r)}
+                aria-label={`Download PDF for ${r.target}, scan ${r.scanId}`}
+              >
+                Download PDF
+              </Button>
+            </li>
+          )
+        })}
+      </ul>
     )
 
   return (
-    <div className="flex flex-col gap-5 px-4 py-6 md:px-6">
+    <Page>
       <PageHeader
         title="Reports"
-        meta={
-          reports.data
-            ? `${reports.data.length} generated`
-            : reports.isError
-              ? 'could not load reports'
-              : 'loading reports'
-        }
-        actions={
-          <Button variant="primary" icon={<IconPlus />} onClick={() => setDialogOpen(true)}>
-            Generate report
-          </Button>
-        }
+        description="A PDF of each finished scan: every issue, where it is, and how to fix it."
+        actions={createButton}
       />
-      <Panel label="reports">{body}</Panel>
-      <p className="font-mono text-[11.5px] text-smoke">
-        The reports endpoint is set to fail on its first request after every page load, to show error
-        handling. Retry recovers it.
-      </p>
-      <GenerateReportDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-    </div>
+      <Card bodyClassName="overflow-hidden rounded-lg">{body}</Card>
+      <CreateReportDialog open={dialogOpen || createRequested} onOpenChange={setCreateOpen} />
+    </Page>
   )
 }
